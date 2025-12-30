@@ -2,6 +2,19 @@
 
 A modern web application designed to analyze and manage source code repositories. It provides insights into transition planning, technical debt, and AI-driven code reviews.
 
+## ✨ Visual Showcase
+
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/dashboard_overview.png" alt="Dashboard Overview"/><br/><sub><b>Dashboard Overview</b>: Real-time system status and high-level metrics.</sub></td>
+    <td width="50%"><img src="screenshots/projects_list.png" alt="Projects List"/><br/><sub><b>Project Management</b>: Clear overview of all active projects.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="screenshots/project_details.png" alt="Project Details"/><br/><sub><b>Deep Insights</b>: Detailed repository analysis and contributor stats.</sub></td>
+    <td width="50%"><img src="screenshots/kanban_board.png" alt="Kanban Board"/><br/><sub><b>Agile Tracking</b>: Manage tasks and progress with an interactive board.</sub></td>
+  </tr>
+</table>
+
 ## 🚀 Features
 
 - **Project Management**: Organize and track multiple source code projects.
