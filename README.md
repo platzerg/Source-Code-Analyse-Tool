@@ -4,18 +4,35 @@ A modern web application designed to analyze and manage source code repositories
 
 ## ✨ Visual Showcase
 
+### Project Management
 <table>
   <tr>
-    <td width="50%"><img src="screenshots/dashboard_overview.png" alt="Dashboard Overview"/><br/><sub><b>Dashboard Overview</b>: Real-time system status and high-level metrics.</sub></td>
-    <td width="50%"><img src="screenshots/projects_list.png" alt="Projects List"/><br/><sub><b>Project Management</b>: Clear overview of all active projects.</sub></td>
+    <td width="50%"><img src="screenshots/dashboard_overview.png" alt="Dashboard Overview"/><br/><sub><b>System Overview</b>: Real-time status and cross-project metrics at a glance.</sub></td>
+    <td width="50%"><img src="screenshots/projects_list.png" alt="Projects List"/><br/><sub><b>Project Hub</b>: Centralized management and access to all analysis projects.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="screenshots/project_details.png" alt="Project Details"/><br/><sub><b>Project Deep-Dive</b>: Detailed repository overview and management.</sub></td>
-    <td width="50%"><img src="screenshots/project_insights.png" alt="Project Insights"/><br/><sub><b>Analytics & Insights</b>: Contributor analysis, code churn, and debt tracking.</sub></td>
+    <td width="50%"><img src="screenshots/kanban_board.png" alt="Kanban Board"/><br/><sub><b>Agile Tracking</b>: Interactive board for managing development tasks.</sub></td>
+    <td width="50%"><img src="screenshots/project_roadmap.png" alt="Project Roadmap"/><br/><sub><b>Strategic Planning</b>: Multi-quarter roadmap visualization.</sub></td>
+  </tr>
+</table>
+
+### Repository Operations
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/repositories_list.png" alt="Repositories List"/><br/><sub><b>Repo Management</b>: Live progress tracking for clones and scans.</sub></td>
+    <td width="50%"><img src="screenshots/add_repository.png" alt="Add Repository"/><br/><sub><b>Smart Integration</b>: Streamlined onboarding for remote or local repos.</sub></td>
+  </tr>
+</table>
+
+### AI-Driven Analysis
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/code_analysis.png" alt="Code Analysis"/><br/><sub><b>Impact Assessment</b>: AI recommendations and development effort estimation.</sub></td>
+    <td width="50%"><img src="screenshots/tech_stack_analysis.png" alt="Tech Stack"/><br/><sub><b>Architectural Audit</b>: Deep-dive into technical composition and complexity.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="screenshots/kanban_board.png" alt="Kanban Board"/><br/><sub><b>Agile Tracking</b>: Manage tasks and progress with an interactive board.</sub></td>
-    <td width="50%"><img src="screenshots/project_roadmap.png" alt="Project Roadmap"/><br/><sub><b>Strategic Planning</b>: Visualize project timelines and milestones.</sub></td>
+    <td width="50%"><img src="screenshots/project_insights.png" alt="Project Insights"/><br/><sub><b>Health Analytics</b>: Contributor analysis, code churn, and debt hotspots.</sub></td>
+    <td width="50%"><img src="screenshots/ai_chat_interface.png" alt="AI Chat"/><br/><sub><b>Contextual AI</b>: Interactive chat for deep codebase querying.</sub></td>
   </tr>
 </table>
 
