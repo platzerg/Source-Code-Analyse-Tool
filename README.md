@@ -43,6 +43,21 @@ A modern web application designed to analyze and manage source code repositories
   </tr>
 </table>
 
+### Deep Technical Analysis
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/code_flow_graph.png" alt="Code Flow Graph"/><br/><sub><b>Logic Visualization</b>: Automated mapping of application flows and logic paths.</sub></td>
+    <td width="50%"><img src="screenshots/new_code_flow_analysis.png" alt="New Code Flow"/><br/><sub><b>Scenario Analysis</b>: Define and analyze specific use-cases across the codebase.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="screenshots/module_dependency_graph.png" alt="Dependency Graph"/><br/><sub><b>Structural Audit</b>: Visualizing module interactions and circular dependency detection.</sub></td>
+    <td width="50%"><img src="screenshots/code_quality_metrics.png" alt="Code Quality"/><br/><sub><b>Quality Guardrails</b>: Dead code detection, complexity hotspots, and coverage trends.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="screenshots/team_staffing_recommendations.png" alt="Team Staffing"/><br/><sub><b>Resource Optimization</b>: AI-recommended team composition based on tech-stack complexity and maintenance needs.</sub></td>
+  </tr>
+</table>
+
 ## 🚀 Features
 
 - **Project Management**: Organize and track multiple source code projects.
