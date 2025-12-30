@@ -10,8 +10,12 @@ A modern web application designed to analyze and manage source code repositories
     <td width="50%"><img src="screenshots/projects_list.png" alt="Projects List"/><br/><sub><b>Project Management</b>: Clear overview of all active projects.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="screenshots/project_details.png" alt="Project Details"/><br/><sub><b>Deep Insights</b>: Detailed repository analysis and contributor stats.</sub></td>
+    <td width="50%"><img src="screenshots/project_details.png" alt="Project Details"/><br/><sub><b>Project Deep-Dive</b>: Detailed repository overview and management.</sub></td>
+    <td width="50%"><img src="screenshots/project_insights.png" alt="Project Insights"/><br/><sub><b>Analytics & Insights</b>: Contributor analysis, code churn, and debt tracking.</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="screenshots/kanban_board.png" alt="Kanban Board"/><br/><sub><b>Agile Tracking</b>: Manage tasks and progress with an interactive board.</sub></td>
+    <td width="50%"><img src="screenshots/project_roadmap.png" alt="Project Roadmap"/><br/><sub><b>Strategic Planning</b>: Visualize project timelines and milestones.</sub></td>
   </tr>
 </table>
 
