@@ -11,6 +11,10 @@ A modern web application designed to analyze and manage source code repositories
     <td width="50%"><img src="screenshots/projects_list.png" alt="Projects List"/><br/><sub><b>Project Hub</b>: Centralized management and access to all analysis projects.</sub></td>
   </tr>
   <tr>
+    <td width="50%"><img src="screenshots/project_details.png" alt="Project Details"/><br/><sub><b>Project Deep-Dive</b>: Detailed view of repositories assigned to a specific project.</sub></td>
+    <td width="50%"><img src="screenshots/project_backlog.png" alt="Project Backlog"/><br/><sub><b>Backlog Management</b>: Prioritized list of tasks and feature requests.</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="screenshots/kanban_board.png" alt="Kanban Board"/><br/><sub><b>Agile Tracking</b>: Interactive board for managing development tasks.</sub></td>
     <td width="50%"><img src="screenshots/project_roadmap.png" alt="Project Roadmap"/><br/><sub><b>Strategic Planning</b>: Multi-quarter roadmap visualization.</sub></td>
   </tr>
