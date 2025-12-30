@@ -61,6 +61,8 @@ interface Repository {
     commitAnalysis: { status: string; commitsAnalyzed?: number };
     repoScan: { status: string; filesScanned?: number; totalFiles?: number };
     createdAt: string;
+    commits_count?: string;
+    vulnerabilities_count?: number;
 }
 
 interface Project {
@@ -69,6 +71,13 @@ interface Project {
     description: string;
     status: string;
     updatedAt: string;
+    tasks?: Task[];
+    milestones?: { label: string; progress: number; quarter: string }[];
+    stats?: {
+        active_issues: number;
+        open_prs: number;
+        contributors: number;
+    };
 }
 
 interface Task {
@@ -97,7 +106,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     const [activeTab, setActiveTab] = useState<'repositories' | 'backlog' | 'board' | 'roadmap' | 'insights'>('repositories');
 
     // Task Management
-    const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+    const [tasks, setTasks] = useState<Task[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
 
     const filteredTasks = useMemo(() => {
@@ -152,8 +161,14 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         name: projectData.name,
                         description: projectData.description,
                         status: projectData.status,
-                        updatedAt: projectData.start_date
+                        updatedAt: projectData.start_date,
+                        tasks: projectData.tasks || [],
+                        milestones: projectData.milestones || [],
+                        stats: projectData.stats
                     });
+                    if (projectData.tasks) {
+                        setTasks(projectData.tasks);
+                    }
                 }
 
                 if (reposRes.ok) {
@@ -169,7 +184,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                             filesScanned: 0,
                             totalFiles: 100
                         },
-                        createdAt: r.added_at
+                        createdAt: r.added_at,
+                        commits_count: r.commits_count,
+                        vulnerabilities_count: r.vulnerabilities_count
                     }));
                     setRepositories(mappedRepos);
                 }
@@ -304,7 +321,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         </div>
                                         <div>
                                             <p className="text-xs font-medium text-gray-500">Active Issues</p>
-                                            <p className="text-lg font-bold text-gray-900">42</p>
+                                            <p className="text-lg font-bold text-gray-900">{project.stats?.active_issues || 0}</p>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -315,7 +332,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         </div>
                                         <div>
                                             <p className="text-xs font-medium text-gray-500">Open PRs</p>
-                                            <p className="text-lg font-bold text-gray-900">8</p>
+                                            <p className="text-lg font-bold text-gray-900">{project.stats?.open_prs || 0}</p>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -326,7 +343,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         </div>
                                         <div>
                                             <p className="text-xs font-medium text-gray-500">Contributors</p>
-                                            <p className="text-lg font-bold text-gray-900">12</p>
+                                            <p className="text-lg font-bold text-gray-900">{project.stats?.contributors || 0}</p>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -355,13 +372,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                     <span className="text-xs font-medium text-gray-600 flex items-center gap-2">
                                                         <BarChart2 className="w-3.5 h-3.5 text-gray-400" /> Commits
                                                     </span>
-                                                    <span className="text-xs text-gray-900 font-medium">1.2k</span>
+                                                    <span className="text-xs text-gray-900 font-medium">{repo.commits_count || "0"}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center bg-gray-50 rounded px-3 py-2 border border-gray-100">
                                                     <span className="text-xs font-medium text-gray-600 flex items-center gap-2">
                                                         <Search className="w-3.5 h-3.5 text-gray-400" /> Vulnerabilities
                                                     </span>
-                                                    <span className="text-xs text-emerald-600 font-bold">0</span>
+                                                    <span className={cn(
+                                                        "text-xs font-bold",
+                                                        (repo.vulnerabilities_count || 0) > 0 ? "text-red-600" : "text-emerald-600"
+                                                    )}>{repo.vulnerabilities_count || 0}</span>
                                                 </div>
                                             </div>
                                             <Link href={`/repositories/${repo.id}`} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors w-full justify-center shadow-sm">
@@ -550,17 +570,18 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         <div className="w-1/4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left pl-4 border-l border-gray-100">Quarter 4</div>
                                     </div>
                                     <div className="space-y-4">
-                                        <div className="relative h-8 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center px-4 w-[40%] ml-0">
-                                            <span className="text-xs font-bold text-emerald-700">Phase 1: Foundation</span>
-                                            <span className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white shadow-sm" />
-                                        </div>
-                                        <div className="relative h-8 bg-blue-50 border border-blue-100 rounded-lg flex items-center px-4 w-[50%] ml-[30%]">
-                                            <span className="text-xs font-bold text-blue-700">Phase 2: Core Development</span>
-                                            <span className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 bg-blue-500 rounded-full border-4 border-white shadow-sm" />
-                                        </div>
-                                        <div className="relative h-8 bg-orange-50 border border-orange-100 rounded-lg flex items-center px-4 w-[35%] ml-[65%]">
-                                            <span className="text-xs font-bold text-orange-700">Phase 3: Beta Testing</span>
-                                        </div>
+                                        {(project.milestones || []).map((ms, i) => (
+                                            <div key={i} className="relative h-8 bg-blue-50 border border-blue-100 rounded-lg flex items-center px-4"
+                                                style={{ width: `${ms.progress || 10}%`, marginLeft: i === 0 ? '0' : `${i * 10}%` }}>
+                                                <span className="text-xs font-bold text-blue-700 whitespace-nowrap">{ms.label}</span>
+                                                {ms.progress === 100 && (
+                                                    <span className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white shadow-sm" />
+                                                )}
+                                            </div>
+                                        ))}
+                                        {(!project.milestones || project.milestones.length === 0) && (
+                                            <div className="text-sm text-gray-400 italic">No milestones defined for this project.</div>
+                                        )}
                                     </div>
                                 </div>
                                 <button className="mt-8 px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-sm text-sm">
@@ -611,12 +632,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                             <Zap className="w-4 h-4 text-blue-500" />
                                                         </div>
                                                         <div className="flex items-baseline gap-2">
-                                                            <h3 className="text-2xl font-bold text-gray-900">4.2/day</h3>
+                                                            <h3 className="text-2xl font-bold text-gray-900">{projectInsights.find(i => i.type === 'deployment')?.data.frequency || 'N/A'}</h3>
                                                             <span className="text-xs text-emerald-600 font-medium flex items-center">
-                                                                <TrendingUp className="w-3 h-3 mr-0.5" /> +12%
+                                                                <TrendingUp className="w-3 h-3 mr-0.5" /> {projectInsights.find(i => i.type === 'deployment')?.data.trend || '0%'}
                                                             </span>
                                                         </div>
-                                                        <p className="text-xs text-gray-400 mt-1">High velocity</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{projectInsights.find(i => i.type === 'deployment')?.data.status || 'Checking...'}</p>
                                                     </CardContent>
                                                 </Card>
                                                 <Card className="border-none shadow-sm ring-1 ring-gray-100">
@@ -786,35 +807,47 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                             );
                                         })()}
 
-                                        {/* Changelog Generator - still static for now as no backend data */}
-                                        <Card className="border-none shadow-sm ring-1 ring-gray-100 lg:col-span-2">
-                                            <CardContent className="p-6 h-full flex flex-col">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div>
-                                                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                                            <History className="w-5 h-5 text-emerald-600" />
-                                                            Project Changelog
-                                                        </h3>
-                                                        <p className="text-xs text-gray-500 mt-1">Automated release notes from recent activity</p>
-                                                    </div>
-                                                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors">
-                                                        <Zap className="w-3 h-3" /> Generate v0.3.0
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex-1 bg-gray-50 rounded-xl border border-gray-100 p-4 font-mono text-sm overflow-y-auto max-h-[300px]">
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <h4 className="font-bold text-gray-900 mb-2">v0.2.1-beta <span className="text-xs font-normal text-gray-500 ml-2">(Current)</span></h4>
-                                                            <ul className="list-disc pl-4 space-y-1 text-gray-600">
-                                                                <li><span className="text-[#0969da] font-medium">[New]</span> Added Project Insights dashboard tab</li>
-                                                                <li><span className="text-[#0969da] font-medium">[Fix]</span> Resolved navigation lag on repository lists</li>
-                                                            </ul>
+                                        {/* Changelog Generator */}
+                                        {(() => {
+                                            const changelog = projectInsights.find(i => i.type === 'changelog')?.data;
+                                            return (
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100 lg:col-span-2">
+                                                    <CardContent className="p-6 h-full flex flex-col">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <div>
+                                                                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                                                    <History className="w-5 h-5 text-emerald-600" />
+                                                                    Project Changelog
+                                                                </h3>
+                                                                <p className="text-xs text-gray-500 mt-1">Automated release notes from recent activity</p>
+                                                            </div>
+                                                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors">
+                                                                <Zap className="w-3 h-3" /> Generate {changelog?.next_version || 'v1.0.0'}
+                                                            </button>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+
+                                                        <div className="flex-1 bg-gray-50 rounded-xl border border-gray-100 p-4 font-mono text-sm overflow-y-auto max-h-[300px]">
+                                                            <div className="space-y-4">
+                                                                {changelog ? (
+                                                                    <div>
+                                                                        <h4 className="font-bold text-gray-900 mb-2">{changelog.version} <span className="text-xs font-normal text-gray-500 ml-2">({changelog.date})</span></h4>
+                                                                        <ul className="list-disc pl-4 space-y-1 text-gray-600">
+                                                                            {changelog.changes.map((change: any, i: number) => (
+                                                                                <li key={i}>
+                                                                                    <span className="text-[#0969da] font-medium">[{change.type}]</span> {change.text}
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-gray-400 italic">No changelog data available.</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })()}
                                     </div>
                                 </>
                             )}
