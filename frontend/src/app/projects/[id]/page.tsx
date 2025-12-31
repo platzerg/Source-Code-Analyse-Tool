@@ -52,6 +52,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
+import ManageRepositoriesDialog from "@/components/ManageRepositoriesDialog";
 
 interface Repository {
     id: string;
@@ -78,6 +79,7 @@ interface Project {
         open_prs: number;
         contributors: number;
     };
+    repository_ids?: number[];
 }
 
 interface Task {
@@ -119,6 +121,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
     const [visibleTabs, setVisibleTabs] = useState<Record<string, boolean>>({});
     const [projectInsights, setProjectInsights] = useState<any[]>([]);
+    const [isManageReposOpen, setIsManageReposOpen] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'insights' && id) {
@@ -149,10 +152,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     useEffect(() => {
         const fetchProjectData = async () => {
             try {
-                const [projectRes, reposRes] = await Promise.all([
-                    fetch(`http://localhost:8000/api/v1/projects/${id}`),
-                    fetch(`http://localhost:8000/api/v1/repositories`)
-                ]);
+                const projectRes = await fetch(`http://localhost:8000/api/v1/projects/${id}`);
 
                 if (projectRes.ok) {
                     const projectData = await projectRes.json();
@@ -164,13 +164,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         updatedAt: projectData.start_date,
                         tasks: projectData.tasks || [],
                         milestones: projectData.milestones || [],
-                        stats: projectData.stats
+                        stats: projectData.stats,
+                        repository_ids: projectData.repository_ids || []
                     });
                     if (projectData.tasks) {
                         setTasks(projectData.tasks);
                     }
                 }
 
+                // Fetch only linked repositories
+                const reposRes = await fetch(`http://localhost:8000/api/v1/projects/${id}/repositories`);
                 if (reposRes.ok) {
                     const reposData = await reposRes.json();
                     const mappedRepos: Repository[] = reposData.map((r: any) => ({
@@ -347,6 +350,18 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         </div>
                                     </CardContent>
                                 </Card>
+                            </div>
+
+                            {/* Manage Repositories Button */}
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">Repositories</h3>
+                                <button
+                                    onClick={() => setIsManageReposOpen(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors text-sm font-medium"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Manage Repositories
+                                </button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -856,6 +871,38 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
                 </div>
             </div>
+
+            {/* Manage Repositories Dialog */}
+            <ManageRepositoriesDialog
+                isOpen={isManageReposOpen}
+                onClose={() => setIsManageReposOpen(false)}
+                projectId={id}
+                currentRepositoryIds={project?.repository_ids || []}
+                onSave={(newRepositoryIds) => {
+                    // Refresh repositories after save
+                    fetch(`http://localhost:8000/api/v1/projects/${id}/repositories`)
+                        .then(res => res.json())
+                        .then(reposData => {
+                            const mappedRepos: Repository[] = reposData.map((r: any) => ({
+                                id: String(r.id),
+                                name: r.name,
+                                url: r.url,
+                                isCloned: r.status === "Cloned",
+                                commitAnalysis: { status: r.commit_analysis || "Not Started" },
+                                repoScan: { status: r.repo_scan || "Not Started" },
+                                createdAt: r.added_at,
+                                commits_count: r.commits_count,
+                                vulnerabilities_count: r.vulnerabilities_count
+                            }));
+                            setRepositories(mappedRepos);
+                            // Update project with new repository_ids
+                            if (project) {
+                                setProject({ ...project, repository_ids: newRepositoryIds });
+                            }
+                        })
+                        .catch(err => console.error("Error refreshing repositories:", err));
+                }}
+            />
         </div>
     );
 }

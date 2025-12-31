@@ -51,6 +51,7 @@ class Project(BaseModel):
     tasks: Optional[List[ProjectTask]] = None
     milestones: Optional[List[ProjectMilestone]] = None
     stats: Optional[ProjectStats] = None
+    repository_ids: Optional[List[int]] = []
 
 class RepositoryCreate(BaseModel):
     name: str
@@ -628,3 +629,38 @@ def update_settings(settings: dict):
     """Update application settings"""
     save_settings(settings)
     return {"message": "Settings updated successfully"}
+
+# Project-Repository Management
+@router.put("/projects/{project_id}/repositories")
+def update_project_repositories(project_id: int, repository_ids: List[int]):
+    """Update the repositories linked to a project"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Update repository_ids
+    project.repository_ids = repository_ids
+    save_projects(projects)
+    
+    return {"message": "Repositories updated successfully", "repository_ids": repository_ids}
+
+@router.get("/projects/{project_id}/repositories")
+def get_project_repositories(project_id: int):
+    """Get full repository objects for a project"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Load full repository details
+    all_repos = load_repositories()
+    project_repos = [r for r in all_repos if r.id in (project.repository_ids or [])]
+    
+    return project_repos

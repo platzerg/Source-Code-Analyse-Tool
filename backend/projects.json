@@ -3,14 +3,9 @@
         "id": 1,
         "name": "Agentic AI Code Assistant",
         "description": "An AI-powered tool for analyzing source code and aiding in transitions.",
-        "owner": "Platzer Günter",
+        "owner": "Platzer G\u00c3\u00bcnter",
         "start_date": "2025-12-20",
         "status": "active",
-        "stats": {
-            "active_issues": 42,
-            "open_prs": 8,
-            "contributors": 12
-        },
         "tasks": [
             {
                 "id": "1",
@@ -62,26 +57,14 @@
                 "quarter": "Q1 2026"
             }
         ],
-        "ui_labels": {
-            "stats": {
-                "connected_repos": "Connected Repos",
-                "active_issues": "Active Issues",
-                "open_prs": "Open PRs",
-                "contributors": "Contributors"
-            },
-            "tabs": {
-                "repositories": "Repositories",
-                "backlog": "Backlog",
-                "board": "Board",
-                "roadmap": "Roadmap",
-                "insights": "Insights"
-            },
-            "repository_card": {
-                "commits": "Commits",
-                "vulnerabilities": "Vulnerabilities",
-                "view_details": "View Repository Details"
-            }
-        }
+        "stats": {
+            "active_issues": 42,
+            "open_prs": 8,
+            "contributors": 12
+        },
+        "repository_ids": [
+            1
+        ]
     },
     {
         "id": 2,
@@ -158,7 +141,10 @@
             "active_issues": 87,
             "open_prs": 23,
             "contributors": 18
-        }
+        },
+        "repository_ids": [
+            2
+        ]
     },
     {
         "id": 3,
@@ -219,6 +205,9 @@
             "active_issues": 12,
             "open_prs": 0,
             "contributors": 5
-        }
+        },
+        "repository_ids": [
+            3
+        ]
     }
 ]

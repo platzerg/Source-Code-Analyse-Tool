@@ -828,5 +828,84 @@
             ],
             "project_state": "Active Development"
         }
+    },
+    {
+        "id": 3,
+        "name": "mobile-app-frontend",
+        "url": "https://github.com/platform-team/mobile-app-frontend",
+        "username": "platform-team",
+        "main_branch": "main",
+        "status": "Cloned",
+        "commit_analysis": "Not Started",
+        "repo_scan": "Not Started",
+        "added_at": "2025-01-02",
+        "scanned_at": "",
+        "commits_count": "0",
+        "vulnerabilities_count": 0,
+        "analysis_metrics": {
+            "effort_manual_hours": 0,
+            "ai_savings_percentage": 0,
+            "complexity_score": 0,
+            "high_risk_commits": 0,
+            "medium_risk_commits": 0,
+            "low_risk_commits": 0,
+            "oss_tech_percentage": 0,
+            "working_days": 0
+        },
+        "tech_stack": [
+            {
+                "name": "React Native",
+                "fte": 0,
+                "commits": 0,
+                "complexity": 0,
+                "color": "#61dafb"
+            },
+            {
+                "name": "TypeScript",
+                "fte": 0,
+                "commits": 0,
+                "complexity": 0,
+                "color": "#3178c6"
+            }
+        ],
+        "vulnerabilities": [],
+        "secrets": [],
+        "compliance": [],
+        "security_score": "A",
+        "team_staffing": [],
+        "dead_code": [],
+        "duplication_blocks": [],
+        "complexity_by_file": [],
+        "test_coverage": {
+            "total": 0,
+            "by_folder": []
+        },
+        "dependency_stats": {
+            "total": 0,
+            "internal": 0,
+            "external": 0,
+            "circular": 0
+        },
+        "dependency_graph": {
+            "nodes": [],
+            "edges": []
+        },
+        "circular_dependencies": [],
+        "import_export_analysis": [],
+        "pull_requests": [],
+        "feature_map": {
+            "nodes": [],
+            "edges": []
+        },
+        "chat_history": [],
+        "feature_requests": [],
+        "code_flow_requests": [],
+        "code_flows": null,
+        "overview_analysis": {
+            "stack_complexity_text": "New repository - analysis pending.",
+            "ai_impact_text": "No analysis data available yet.",
+            "recommendations": [],
+            "project_state": "Planning"
+        }
     }
 ]
