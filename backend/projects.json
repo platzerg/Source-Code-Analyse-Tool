@@ -18,7 +18,7 @@
             {
                 "id": "2",
                 "title": "Setup PostgreSQL Database",
-                "status": "Todo",
+                "status": "Done",
                 "assignee": "Michael Ross",
                 "priority": "High",
                 "due_date": "2025-12-10"
@@ -80,6 +80,12 @@
                 "progress": 100,
                 "date": "2025-11-26",
                 "end_date": "2026-01-04"
+            },
+            {
+                "label": "v0.1 Alpha",
+                "progress": 0,
+                "date": "2025-01-15",
+                "end_date": "2025-02-15"
             }
         ],
         "stats": {
