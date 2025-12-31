@@ -50,7 +50,10 @@ export default function CreateTaskDialog({
 
             if (response.ok) {
                 const createdTask = await response.json();
-                onTaskCreated(createdTask);
+                onTaskCreated({
+                    ...createdTask,
+                    dueDate: createdTask.due_date
+                });
                 // Reset form
                 setTitle("");
                 setAssignee("");

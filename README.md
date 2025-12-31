@@ -77,6 +77,7 @@ A modern web application designed to analyze and manage source code repositories
 - **Repository Integration**: Clone or upload repositories for deep analysis.
 - **AI-Driven Insights**: Automated documentation, code reviews, and bug predictions using AI.
 - **Dashboard Metrics**: Visualize total value, active categories, and project health.
+- **Interactive Roadmap**: Timeline-based Gantt chart with drag-and-drop scheduling.
 - **Real-time Status**: Live streaming of repository cloning and scanning progress.
 
 ## 🛠 Tech Stack
@@ -118,7 +119,7 @@ This application is **100% dynamized**, meaning all displayed data is fetched fr
 | **Repositories** | `projects.json` + `repositories.json` | `projects[].stats.active_issues`, `projects[].stats.open_prs`, `projects[].stats.contributors`, `repositories[].commits_count`, `repositories[].vulnerabilities_count` | Repository filtering logic |
 | **Backlog** | `projects.json` | `projects[].tasks[]` (id, title, status, assignee, priority, due_date) | Task filtering by status |
 | **Board** | `projects.json` | `projects[].tasks[]` | Kanban column grouping (To Do, In Progress, Done) |
-| **Roadmap** | `projects.json` | `projects[].milestones[]` (label, progress, quarter) | Timeline visualization |
+| **Roadmap** | `projects.json` | `projects[].milestones[]` (label, progress, date, end_date) | Gantt timeline visualization with drag-and-drop |
 | **Insights** | `/api/v1/projects/{id}/insights` | `insights[]` (type: contributors, churn, debt, deployment, changelog) | Chart rendering (Recharts) |
 
 ### Repositories View (`/repositories`)

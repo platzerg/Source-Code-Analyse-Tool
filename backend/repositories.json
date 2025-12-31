@@ -266,8 +266,6 @@
         "repo_scan": "Completed",
         "added_at": "2024-12-15",
         "scanned_at": "2024-12-30",
-        "commits_count": "3,847",
-        "vulnerabilities_count": 5,
         "analysis_metrics": {
             "effort_manual_hours": 4200,
             "ai_savings_percentage": 35,
@@ -388,7 +386,6 @@
                 "status": "Fail"
             }
         ],
-        "security_score": "B",
         "team_staffing": [
             {
                 "id": 1,
@@ -541,6 +538,49 @@
                 }
             ]
         },
+        "code_flows": null,
+        "chat_history": [
+            {
+                "id": "c1",
+                "title": "Payment Gateway Integration",
+                "text": "How is the Stripe payment gateway integrated?",
+                "date": "2024-12-20"
+            },
+            {
+                "id": "c2",
+                "title": "Database Schema",
+                "text": "Explain the orders table structure",
+                "date": "2024-12-22"
+            }
+        ],
+        "feature_requests": [
+            {
+                "id": "fr1",
+                "title": "Add Wishlist Feature",
+                "description": "Users should be able to save products to a wishlist",
+                "date": "2024-12-18",
+                "status": "Analyzed",
+                "complexity": "Medium",
+                "type": "Feature",
+                "summary": "Requires new database table, API endpoints, and frontend components",
+                "identifiedFiles": [
+                    "src/users/model.ts",
+                    "src/products/controller.ts",
+                    "src/database/migrations/"
+                ],
+                "prompt": "Create a wishlist feature that allows users to save products..."
+            }
+        ],
+        "code_flow_requests": [
+            {
+                "id": "cf1",
+                "title": "Order Processing Flow",
+                "description": "Trace the complete order processing from cart to confirmation",
+                "date": "2024-12-25",
+                "status": "Completed",
+                "content": null
+            }
+        ],
         "dependency_stats": {
             "total": 156,
             "internal": 42,
@@ -655,6 +695,26 @@
                 "maturity": "Stable"
             }
         ],
+        "security_score": "B",
+        "overview_analysis": {
+            "stack_complexity_text": "This e-commerce platform uses a modern Node.js/TypeScript stack with PostgreSQL and Redis. The microservices architecture adds complexity but provides scalability. Docker containerization is well-implemented.",
+            "ai_impact_text": "The codebase shows signs of manual development without AI assistance. Using AI coding tools could reduce development time by 35% and improve code quality through automated refactoring and test generation.",
+            "recommendations": [
+                {
+                    "title": "Reduce Circular Dependencies",
+                    "text": "Address the 3 circular dependencies to improve maintainability"
+                },
+                {
+                    "title": "Increase Test Coverage",
+                    "text": "Focus on payments module (68%) and orders module (72%)"
+                },
+                {
+                    "title": "Security Hardening",
+                    "text": "Fix 2 High severity vulnerabilities and remove hardcoded secrets"
+                }
+            ],
+            "project_state": "Active Development"
+        },
         "pull_requests": [
             {
                 "id": "PR-145",
@@ -692,8 +752,8 @@
                 {
                     "id": "checkout",
                     "position": {
-                        "x": 150,
-                        "y": 50
+                        "x": 150.0,
+                        "y": 50.0
                     },
                     "data": {
                         "label": "Checkout Flow"
@@ -706,8 +766,8 @@
                 {
                     "id": "payment",
                     "position": {
-                        "x": 350,
-                        "y": 50
+                        "x": 350.0,
+                        "y": 50.0
                     },
                     "data": {
                         "label": "Payment Processing"
@@ -720,8 +780,8 @@
                 {
                     "id": "inventory",
                     "position": {
-                        "x": 150,
-                        "y": 200
+                        "x": 150.0,
+                        "y": 200.0
                     },
                     "data": {
                         "label": "Inventory Management"
@@ -734,8 +794,8 @@
                 {
                     "id": "shipping",
                     "position": {
-                        "x": 350,
-                        "y": 200
+                        "x": 350.0,
+                        "y": 200.0
                     },
                     "data": {
                         "label": "Shipping Integration"
@@ -767,67 +827,8 @@
                 }
             ]
         },
-        "chat_history": [
-            {
-                "id": "c1",
-                "title": "Payment Gateway Integration",
-                "text": "How is the Stripe payment gateway integrated?",
-                "date": "2024-12-20"
-            },
-            {
-                "id": "c2",
-                "title": "Database Schema",
-                "text": "Explain the orders table structure",
-                "date": "2024-12-22"
-            }
-        ],
-        "feature_requests": [
-            {
-                "id": "fr1",
-                "title": "Add Wishlist Feature",
-                "description": "Users should be able to save products to a wishlist",
-                "date": "2024-12-18",
-                "status": "Analyzed",
-                "complexity": "Medium",
-                "type": "Feature",
-                "summary": "Requires new database table, API endpoints, and frontend components",
-                "identifiedFiles": [
-                    "src/users/model.ts",
-                    "src/products/controller.ts",
-                    "src/database/migrations/"
-                ],
-                "prompt": "Create a wishlist feature that allows users to save products..."
-            }
-        ],
-        "code_flow_requests": [
-            {
-                "id": "cf1",
-                "title": "Order Processing Flow",
-                "description": "Trace the complete order processing from cart to confirmation",
-                "date": "2024-12-25",
-                "status": "Completed"
-            }
-        ],
-        "code_flows": null,
-        "overview_analysis": {
-            "stack_complexity_text": "This e-commerce platform uses a modern Node.js/TypeScript stack with PostgreSQL and Redis. The microservices architecture adds complexity but provides scalability. Docker containerization is well-implemented.",
-            "ai_impact_text": "The codebase shows signs of manual development without AI assistance. Using AI coding tools could reduce development time by 35% and improve code quality through automated refactoring and test generation.",
-            "recommendations": [
-                {
-                    "title": "Reduce Circular Dependencies",
-                    "text": "Address the 3 circular dependencies to improve maintainability"
-                },
-                {
-                    "title": "Increase Test Coverage",
-                    "text": "Focus on payments module (68%) and orders module (72%)"
-                },
-                {
-                    "title": "Security Hardening",
-                    "text": "Fix 2 High severity vulnerabilities and remove hardcoded secrets"
-                }
-            ],
-            "project_state": "Active Development"
-        }
+        "commits_count": "3,847",
+        "vulnerabilities_count": 5
     },
     {
         "id": 3,
@@ -837,11 +838,9 @@
         "main_branch": "main",
         "status": "Cloned",
         "commit_analysis": "Not Started",
-        "repo_scan": "Not Started",
+        "repo_scan": "Completed",
         "added_at": "2025-01-02",
-        "scanned_at": "",
-        "commits_count": "0",
-        "vulnerabilities_count": 0,
+        "scanned_at": "Dec 31, 25, 01:48 PM",
         "analysis_metrics": {
             "effort_manual_hours": 0,
             "ai_savings_percentage": 0,
@@ -855,23 +854,22 @@
         "tech_stack": [
             {
                 "name": "React Native",
-                "fte": 0,
+                "fte": 0.0,
                 "commits": 0,
-                "complexity": 0,
+                "complexity": 0.0,
                 "color": "#61dafb"
             },
             {
                 "name": "TypeScript",
-                "fte": 0,
+                "fte": 0.0,
                 "commits": 0,
-                "complexity": 0,
+                "complexity": 0.0,
                 "color": "#3178c6"
             }
         ],
         "vulnerabilities": [],
         "secrets": [],
         "compliance": [],
-        "security_score": "A",
         "team_staffing": [],
         "dead_code": [],
         "duplication_blocks": [],
@@ -880,6 +878,10 @@
             "total": 0,
             "by_folder": []
         },
+        "code_flows": null,
+        "chat_history": [],
+        "feature_requests": [],
+        "code_flow_requests": [],
         "dependency_stats": {
             "total": 0,
             "internal": 0,
@@ -892,20 +894,19 @@
         },
         "circular_dependencies": [],
         "import_export_analysis": [],
-        "pull_requests": [],
-        "feature_map": {
-            "nodes": [],
-            "edges": []
-        },
-        "chat_history": [],
-        "feature_requests": [],
-        "code_flow_requests": [],
-        "code_flows": null,
+        "security_score": "A",
         "overview_analysis": {
             "stack_complexity_text": "New repository - analysis pending.",
             "ai_impact_text": "No analysis data available yet.",
             "recommendations": [],
             "project_state": "Planning"
-        }
+        },
+        "pull_requests": [],
+        "feature_map": {
+            "nodes": [],
+            "edges": []
+        },
+        "commits_count": "0",
+        "vulnerabilities_count": 0
     }
 ]

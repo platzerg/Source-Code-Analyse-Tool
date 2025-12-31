@@ -34,7 +34,8 @@ class ProjectTask(BaseModel):
 class ProjectMilestone(BaseModel):
     label: str
     progress: int
-    quarter: str
+    date: str
+    end_date: Optional[str] = None
 
 class ProjectStats(BaseModel):
     active_issues: int
@@ -704,3 +705,89 @@ def update_task_status(project_id: int, task_id: str, status: str):
     save_projects(projects)
     
     return {"message": "Task status updated", "task_id": task_id, "status": status}
+
+# Milestone Management Endpoints
+@router.post("/projects/{project_id}/milestones")
+def create_milestone(project_id: int, milestone: ProjectMilestone):
+    """Create a new milestone in a project"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if not project.milestones:
+        project.milestones = []
+    
+    project.milestones.append(milestone)
+    save_projects(projects)
+    
+    return milestone
+
+
+
+# Endpoint updates below
+@router.delete("/projects/{project_id}/milestones/{milestone_label}")
+def delete_milestone(project_id: int, milestone_label: str):
+    """Delete a milestone from a project"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project or not project.milestones:
+        raise HTTPException(status_code=404, detail="Project or milestones not found")
+    
+    initial_count = len(project.milestones)
+    project.milestones = [m for m in project.milestones if m.label != milestone_label]
+    
+    if len(project.milestones) == initial_count:
+        raise HTTPException(status_code=404, detail="Milestone not found")
+        
+    save_projects(projects)
+    return {"status": "success", "message": f"Milestone '{milestone_label}' deleted"}
+
+@router.put("/projects/{project_id}/milestones/{milestone_label}")
+def update_milestone(project_id: int, milestone_label: str, update_data: ProjectMilestone):
+    """Update milestone details (progress, dates)"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project or not project.milestones:
+        raise HTTPException(status_code=404, detail="Project or milestones not found")
+    
+    # Find and update
+    for i, m in enumerate(project.milestones):
+        if m.label == milestone_label:
+            # We allow label update? Probably risky for ID. Let's keep label same for now or update it.
+            # update_data might have new label.
+            # If label changes, we simply replace the object.
+            project.milestones[i] = update_data
+            save_projects(projects)
+            return update_data
+            
+    raise HTTPException(status_code=404, detail="Milestone not found")
+
+@router.put("/projects/{project_id}/milestones/{milestone_label}/date")
+def update_milestone_date(project_id: int, milestone_label: str, date: str):
+    """Update milestone date (legacy/shortcut)"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project or not project.milestones:
+        raise HTTPException(status_code=404, detail="Project or milestones not found")
+    
+    milestone = next((m for m in project.milestones if m.label == milestone_label), None)
+    if not milestone:
+        raise HTTPException(status_code=404, detail="Milestone not found")
+    
+    milestone.date = date
+    save_projects(projects)
+    
+    return {"message": "Milestone date updated", "label": milestone_label, "date": date}

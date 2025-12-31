@@ -54,6 +54,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import ManageRepositoriesDialog from "@/components/ManageRepositoriesDialog";
 import DragDropBoard from "@/components/DragDropBoard";
+import DragDropRoadmap from "@/components/DragDropRoadmap";
 
 interface Repository {
     id: string;
@@ -74,7 +75,7 @@ interface Project {
     status: string;
     updatedAt: string;
     tasks?: Task[];
-    milestones?: { label: string; progress: number; quarter: string }[];
+    milestones?: { label: string; progress: number; date: string }[];
     stats?: {
         active_issues: number;
         open_prs: number;
@@ -88,7 +89,7 @@ interface Task {
     title: string;
     status: 'Todo' | 'In Progress' | 'Done';
     assignee: string;
-    priority: 'Low' | 'Medium' | 'High';
+    priority: 'Low' | 'Medium' | 'High' | 'Critical';
     dueDate: string;
 }
 
@@ -169,7 +170,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         repository_ids: projectData.repository_ids || []
                     });
                     if (projectData.tasks) {
-                        setTasks(projectData.tasks);
+                        const mappedTasks: Task[] = projectData.tasks.map((t: any) => ({
+                            id: t.id,
+                            title: t.title,
+                            status: t.status,
+                            assignee: t.assignee,
+                            priority: t.priority,
+                            dueDate: t.due_date || t.dueDate // Handle both potentially
+                        }));
+                        setTasks(mappedTasks);
                     }
                 }
 
@@ -511,341 +520,316 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         </div>
                     )}
 
-                {/* 4. ROADMAP TAB */}
-                {activeTab === 'roadmap' && (
-                    <div className="animate-in slide-in-from-right-4 duration-300">
-                        <div className="bg-[#f6f8fa] border border-gray-200 rounded-xl p-8 text-center border-dashed">
-                            <Map className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Project Roadmap</h3>
-                            <p className="text-gray-500 max-w-md mx-auto mb-6 text-sm">
-                                Visualize your project timeline, milestones, and deliverables in a high-level roadmap view.
-                            </p>
-                            <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg p-6 shadow-sm overflow-hidden text-left">
-                                <div className="flex border-b border-gray-100 pb-4 mb-6">
-                                    <div className="w-1/4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left pl-4">Quarter 1</div>
-                                    <div className="w-1/4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left pl-4 border-l border-gray-100">Quarter 2</div>
-                                    <div className="w-1/4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left pl-4 border-l border-gray-100">Quarter 3</div>
-                                    <div className="w-1/4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left pl-4 border-l border-gray-100">Quarter 4</div>
-                                </div>
-                                <div className="space-y-4">
-                                    {(project.milestones || []).map((ms, i) => (
-                                        <div key={i} className="relative h-8 bg-blue-50 border border-blue-100 rounded-lg flex items-center px-4"
-                                            style={{ width: `${ms.progress || 10}%`, marginLeft: i === 0 ? '0' : `${i * 10}%` }}>
-                                            <span className="text-xs font-bold text-blue-700 whitespace-nowrap">{ms.label}</span>
-                                            {ms.progress === 100 && (
-                                                <span className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white shadow-sm" />
-                                            )}
-                                        </div>
-                                    ))}
-                                    {(!project.milestones || project.milestones.length === 0) && (
-                                        <div className="text-sm text-gray-400 italic">No milestones defined for this project.</div>
-                                    )}
-                                </div>
-                            </div>
-                            <button className="mt-8 px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-sm text-sm">
-                                Manage Milestones
-                            </button>
+                    {/* 4. ROADMAP TAB */}
+                    {activeTab === 'roadmap' && (
+                        <div className="animate-in slide-in-from-right-4 duration-300">
+                            <DragDropRoadmap
+                                projectId={id}
+                                milestones={project.milestones || []}
+                                onMilestonesUpdate={(updatedMilestones) => {
+                                    setProject({ ...project, milestones: updatedMilestones });
+                                }}
+                            />
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* 5. INSIGHTS TAB */}
-                {activeTab === 'insights' && (
-                    <div className="space-y-6 animate-in fade-in duration-300">
-                        {projectInsights.length === 0 && (
-                            <div className="text-center py-12">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                                <p className="text-sm text-muted-foreground">Loading Project Insights...</p>
-                            </div>
-                        )}
-
-                        {projectInsights.length > 0 && (
-                            <>
-                                {/* Summary Cards (Partially Dynamic) */}
-                                {(() => {
-                                    const debt = projectInsights.find(i => i.type === 'debt')?.data || {};
-                                    const contributors = projectInsights.find(i => i.type === 'contributors')?.data || {};
-
-                                    return (
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100">
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tech Debt Ratio</p>
-                                                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                                                    </div>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <h3 className="text-2xl font-bold text-gray-900">{debt.debt_ratio || 'N/A'}</h3>
-                                                        <span className="text-xs text-red-600 font-medium flex items-center">
-                                                            <ArrowUpRight className="w-3 h-3 mr-0.5" /> +2.4%
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-400 mt-1">Refactoring needed</p>
-                                                </CardContent>
-                                            </Card>
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100">
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Deployment freq.</p>
-                                                        <Zap className="w-4 h-4 text-blue-500" />
-                                                    </div>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <h3 className="text-2xl font-bold text-gray-900">{projectInsights.find(i => i.type === 'deployment')?.data.frequency || 'N/A'}</h3>
-                                                        <span className="text-xs text-emerald-600 font-medium flex items-center">
-                                                            <TrendingUp className="w-3 h-3 mr-0.5" /> {projectInsights.find(i => i.type === 'deployment')?.data.trend || '0%'}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-400 mt-1">{projectInsights.find(i => i.type === 'deployment')?.data.status || 'Checking...'}</p>
-                                                </CardContent>
-                                            </Card>
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100">
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Active Contributors</p>
-                                                        <Users className="w-4 h-4 text-purple-500" />
-                                                    </div>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <h3 className="text-2xl font-bold text-gray-900">{contributors.labels?.length || 0}</h3>
-                                                        <span className="text-xs text-emerald-600 font-medium flex items-center">
-                                                            <TrendingUp className="w-3 h-3 mr-0.5" /> +2
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-400 mt-1">This week</p>
-                                                </CardContent>
-                                            </Card>
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100">
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Refactor Est.</p>
-                                                        <Clock className="w-4 h-4 text-gray-500" />
-                                                    </div>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <h3 className="text-2xl font-bold text-gray-900">{debt.total_debt_hours ? `${debt.total_debt_hours}h` : 'N/A'}</h3>
-                                                        <span className="text-xs text-gray-500 font-medium">
-                                                            Sprint buffer
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-400 mt-1">To clear high debt</p>
-                                                </CardContent>
-                                            </Card>
-                                        </div>
-                                    );
-                                })()}
-
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Contributor Analysis */}
-                                    {(() => {
-                                        const contributors = projectInsights.find(i => i.type === 'contributors')?.data;
-                                        const chartData = contributors?.labels.map((name: string, i: number) => ({
-                                            name,
-                                            commits: contributors.datasets[0].data[i]
-                                        })) || [];
-
-                                        return (
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100">
-                                                <CardContent className="p-6">
-                                                    <div className="flex items-center justify-between mb-6">
-                                                        <div>
-                                                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                                                <Users className="w-5 h-5 text-blue-600" />
-                                                                Contributor Analysis
-                                                            </h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Commits distribution over the last 30 days</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="h-64">
-                                                        <ResponsiveContainer width="100%" height="100%">
-                                                            <BarChart
-                                                                data={chartData}
-                                                                layout="vertical"
-                                                                margin={{ left: 20 }}
-                                                            >
-                                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                                                <XAxis type="number" />
-                                                                <YAxis type="category" dataKey="name" width={60} />
-                                                                <Tooltip
-                                                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                                                />
-                                                                <Bar dataKey="commits" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} name="Commits" />
-                                                            </BarChart>
-                                                        </ResponsiveContainer>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        );
-                                    })()}
-
-                                    {/* Code Churn / Hotspots */}
-                                    {(() => {
-                                        const churn = projectInsights.find(i => i.type === 'churn')?.data;
-                                        const files = churn?.high_risk_files || [];
-
-                                        return (
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100">
-                                                <CardContent className="p-6">
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <div>
-                                                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                                                <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                                                Code Churn (Hotspots)
-                                                            </h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Files with highest modification frequency impacting risk</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        {files.map((file: any, i: number) => (
-                                                            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                                                <div>
-                                                                    <div className="font-mono text-xs font-bold text-gray-700">{file.name}</div>
-                                                                    <div className="flex items-center gap-2 mt-1">
-                                                                        <span className="text-[10px] text-gray-500">{file.changes} recent changes</span>
-                                                                    </div>
-                                                                </div>
-                                                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
-                                                                    High Risk
-                                                                </span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        );
-                                    })()}
+                    {/* 5. INSIGHTS TAB */}
+                    {activeTab === 'insights' && (
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            {projectInsights.length === 0 && (
+                                <div className="text-center py-12">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                                    <p className="text-sm text-muted-foreground">Loading Project Insights...</p>
                                 </div>
+                            )}
 
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    {/* Technical Debt Estimation */}
+                            {projectInsights.length > 0 && (
+                                <>
+                                    {/* Summary Cards (Partially Dynamic) */}
                                     {(() => {
                                         const debt = projectInsights.find(i => i.type === 'debt')?.data || {};
+                                        const contributors = projectInsights.find(i => i.type === 'contributors')?.data || {};
+
                                         return (
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100 lg:col-span-1">
-                                                <CardContent className="p-6">
-                                                    <div className="mb-6">
-                                                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                                            <FileText className="w-5 h-5 text-gray-600" />
-                                                            Technical Debt
-                                                        </h3>
-                                                        <p className="text-xs text-gray-500 mt-1">Estimated effort to resolve debt</p>
-                                                    </div>
-
-                                                    <div className="space-y-6">
-                                                        <div className="relative pt-2">
-                                                            <div className="flex justify-between items-end mb-2">
-                                                                <span className="text-sm font-medium text-gray-700">Code Smell Ratio</span>
-                                                                <span className="text-sm font-bold text-red-600">{debt.debt_ratio || '0%'}</span>
-                                                            </div>
-                                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                                                <div className="h-full bg-red-500 w-[12.5%]" />
-                                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100">
+                                                    <CardContent className="p-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tech Debt Ratio</p>
+                                                            <AlertTriangle className="w-4 h-4 text-amber-500" />
                                                         </div>
-
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="p-3 bg-red-50 rounded-lg text-center">
-                                                                <p className="text-xs text-red-600 font-bold uppercase mb-1">Critical</p>
-                                                                <p className="text-xl font-bold text-gray-900">{debt.total_debt_hours ? Math.round(debt.total_debt_hours * 0.2) + 'h' : '0h'}</p>
-                                                            </div>
-                                                            <div className="p-3 bg-orange-50 rounded-lg text-center">
-                                                                <p className="text-xs text-orange-600 font-bold uppercase mb-1">Major</p>
-                                                                <p className="text-xl font-bold text-gray-900">{debt.total_debt_hours ? Math.round(debt.total_debt_hours * 0.4) + 'h' : '0h'}</p>
-                                                            </div>
+                                                        <div className="flex items-baseline gap-2">
+                                                            <h3 className="text-2xl font-bold text-gray-900">{debt.debt_ratio || 'N/A'}</h3>
+                                                            <span className="text-xs text-red-600 font-medium flex items-center">
+                                                                <ArrowUpRight className="w-3 h-3 mr-0.5" /> +2.4%
+                                                            </span>
                                                         </div>
-
-                                                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                                                            <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Top Debt Aread</h4>
-                                                            <div className="space-y-1">
-                                                                {debt.top_offenders?.map((offender: string, i: number) => (
-                                                                    <p key={i} className="text-sm font-medium text-gray-900">{offender}</p>
-                                                                ))}
-                                                            </div>
-                                                            <p className="text-xs text-gray-500 mt-1">Complex logic without recent tests.</p>
+                                                        <p className="text-xs text-gray-400 mt-1">Refactoring needed</p>
+                                                    </CardContent>
+                                                </Card>
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100">
+                                                    <CardContent className="p-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Deployment freq.</p>
+                                                            <Zap className="w-4 h-4 text-blue-500" />
                                                         </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
+                                                        <div className="flex items-baseline gap-2">
+                                                            <h3 className="text-2xl font-bold text-gray-900">{projectInsights.find(i => i.type === 'deployment')?.data.frequency || 'N/A'}</h3>
+                                                            <span className="text-xs text-emerald-600 font-medium flex items-center">
+                                                                <TrendingUp className="w-3 h-3 mr-0.5" /> {projectInsights.find(i => i.type === 'deployment')?.data.trend || '0%'}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 mt-1">{projectInsights.find(i => i.type === 'deployment')?.data.status || 'Checking...'}</p>
+                                                    </CardContent>
+                                                </Card>
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100">
+                                                    <CardContent className="p-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Active Contributors</p>
+                                                            <Users className="w-4 h-4 text-purple-500" />
+                                                        </div>
+                                                        <div className="flex items-baseline gap-2">
+                                                            <h3 className="text-2xl font-bold text-gray-900">{contributors.labels?.length || 0}</h3>
+                                                            <span className="text-xs text-emerald-600 font-medium flex items-center">
+                                                                <TrendingUp className="w-3 h-3 mr-0.5" /> +2
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 mt-1">This week</p>
+                                                    </CardContent>
+                                                </Card>
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100">
+                                                    <CardContent className="p-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Refactor Est.</p>
+                                                            <Clock className="w-4 h-4 text-gray-500" />
+                                                        </div>
+                                                        <div className="flex items-baseline gap-2">
+                                                            <h3 className="text-2xl font-bold text-gray-900">{debt.total_debt_hours ? `${debt.total_debt_hours}h` : 'N/A'}</h3>
+                                                            <span className="text-xs text-gray-500 font-medium">
+                                                                Sprint buffer
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 mt-1">To clear high debt</p>
+                                                    </CardContent>
+                                                </Card>
+                                            </div>
                                         );
                                     })()}
 
-                                    {/* Changelog Generator */}
-                                    {(() => {
-                                        const changelog = projectInsights.find(i => i.type === 'changelog')?.data;
-                                        return (
-                                            <Card className="border-none shadow-sm ring-1 ring-gray-100 lg:col-span-2">
-                                                <CardContent className="p-6 h-full flex flex-col">
-                                                    <div className="flex items-center justify-between mb-4">
-                                                        <div>
-                                                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                                                <History className="w-5 h-5 text-emerald-600" />
-                                                                Project Changelog
-                                                            </h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Automated release notes from recent activity</p>
-                                                        </div>
-                                                        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors">
-                                                            <Zap className="w-3 h-3" /> Generate {changelog?.next_version || 'v1.0.0'}
-                                                        </button>
-                                                    </div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Contributor Analysis */}
+                                        {(() => {
+                                            const contributors = projectInsights.find(i => i.type === 'contributors')?.data;
+                                            const chartData = contributors?.labels.map((name: string, i: number) => ({
+                                                name,
+                                                commits: contributors.datasets[0].data[i]
+                                            })) || [];
 
-                                                    <div className="flex-1 bg-gray-50 rounded-xl border border-gray-100 p-4 font-mono text-sm overflow-y-auto max-h-[300px]">
-                                                        <div className="space-y-4">
-                                                            {changelog ? (
-                                                                <div>
-                                                                    <h4 className="font-bold text-gray-900 mb-2">{changelog.version} <span className="text-xs font-normal text-gray-500 ml-2">({changelog.date})</span></h4>
-                                                                    <ul className="list-disc pl-4 space-y-1 text-gray-600">
-                                                                        {changelog.changes.map((change: any, i: number) => (
-                                                                            <li key={i}>
-                                                                                <span className="text-[#0969da] font-medium">[{change.type}]</span> {change.text}
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
+                                            return (
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100">
+                                                    <CardContent className="p-6">
+                                                        <div className="flex items-center justify-between mb-6">
+                                                            <div>
+                                                                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                                                    <Users className="w-5 h-5 text-blue-600" />
+                                                                    Contributor Analysis
+                                                                </h3>
+                                                                <p className="text-xs text-gray-500 mt-1">Commits distribution over the last 30 days</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="h-64">
+                                                            <ResponsiveContainer width="100%" height="100%">
+                                                                <BarChart
+                                                                    data={chartData}
+                                                                    layout="vertical"
+                                                                    margin={{ left: 20 }}
+                                                                >
+                                                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                                                    <XAxis type="number" />
+                                                                    <YAxis type="category" dataKey="name" width={60} />
+                                                                    <Tooltip
+                                                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                                    />
+                                                                    <Bar dataKey="commits" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} name="Commits" />
+                                                                </BarChart>
+                                                            </ResponsiveContainer>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })()}
+
+                                        {/* Code Churn / Hotspots */}
+                                        {(() => {
+                                            const churn = projectInsights.find(i => i.type === 'churn')?.data;
+                                            const files = churn?.high_risk_files || [];
+
+                                            return (
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100">
+                                                    <CardContent className="p-6">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <div>
+                                                                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                                                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                                                                    Code Churn (Hotspots)
+                                                                </h3>
+                                                                <p className="text-xs text-gray-500 mt-1">Files with highest modification frequency impacting risk</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            {files.map((file: any, i: number) => (
+                                                                <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                                                    <div>
+                                                                        <div className="font-mono text-xs font-bold text-gray-700">{file.name}</div>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className="text-[10px] text-gray-500">{file.changes} recent changes</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
+                                                                        High Risk
+                                                                    </span>
                                                                 </div>
-                                                            ) : (
-                                                                <p className="text-gray-400 italic">No changelog data available.</p>
-                                                            )}
+                                                            ))}
                                                         </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        );
-                                    })()}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })()}
+                                    </div>
 
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        {/* Technical Debt Estimation */}
+                                        {(() => {
+                                            const debt = projectInsights.find(i => i.type === 'debt')?.data || {};
+                                            return (
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100 lg:col-span-1">
+                                                    <CardContent className="p-6">
+                                                        <div className="mb-6">
+                                                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                                                <FileText className="w-5 h-5 text-gray-600" />
+                                                                Technical Debt
+                                                            </h3>
+                                                            <p className="text-xs text-gray-500 mt-1">Estimated effort to resolve debt</p>
+                                                        </div>
+
+                                                        <div className="space-y-6">
+                                                            <div className="relative pt-2">
+                                                                <div className="flex justify-between items-end mb-2">
+                                                                    <span className="text-sm font-medium text-gray-700">Code Smell Ratio</span>
+                                                                    <span className="text-sm font-bold text-red-600">{debt.debt_ratio || '0%'}</span>
+                                                                </div>
+                                                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-red-500 w-[12.5%]" />
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div className="p-3 bg-red-50 rounded-lg text-center">
+                                                                    <p className="text-xs text-red-600 font-bold uppercase mb-1">Critical</p>
+                                                                    <p className="text-xl font-bold text-gray-900">{debt.total_debt_hours ? Math.round(debt.total_debt_hours * 0.2) + 'h' : '0h'}</p>
+                                                                </div>
+                                                                <div className="p-3 bg-orange-50 rounded-lg text-center">
+                                                                    <p className="text-xs text-orange-600 font-bold uppercase mb-1">Major</p>
+                                                                    <p className="text-xl font-bold text-gray-900">{debt.total_debt_hours ? Math.round(debt.total_debt_hours * 0.4) + 'h' : '0h'}</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                                                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Top Debt Aread</h4>
+                                                                <div className="space-y-1">
+                                                                    {debt.top_offenders?.map((offender: string, i: number) => (
+                                                                        <p key={i} className="text-sm font-medium text-gray-900">{offender}</p>
+                                                                    ))}
+                                                                </div>
+                                                                <p className="text-xs text-gray-500 mt-1">Complex logic without recent tests.</p>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })()}
+
+                                        {/* Changelog Generator */}
+                                        {(() => {
+                                            const changelog = projectInsights.find(i => i.type === 'changelog')?.data;
+                                            return (
+                                                <Card className="border-none shadow-sm ring-1 ring-gray-100 lg:col-span-2">
+                                                    <CardContent className="p-6 h-full flex flex-col">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <div>
+                                                                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                                                    <History className="w-5 h-5 text-emerald-600" />
+                                                                    Project Changelog
+                                                                </h3>
+                                                                <p className="text-xs text-gray-500 mt-1">Automated release notes from recent activity</p>
+                                                            </div>
+                                                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors">
+                                                                <Zap className="w-3 h-3" /> Generate {changelog?.next_version || 'v1.0.0'}
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex-1 bg-gray-50 rounded-xl border border-gray-100 p-4 font-mono text-sm overflow-y-auto max-h-[300px]">
+                                                            <div className="space-y-4">
+                                                                {changelog ? (
+                                                                    <div>
+                                                                        <h4 className="font-bold text-gray-900 mb-2">{changelog.version} <span className="text-xs font-normal text-gray-500 ml-2">({changelog.date})</span></h4>
+                                                                        <ul className="list-disc pl-4 space-y-1 text-gray-600">
+                                                                            {changelog.changes.map((change: any, i: number) => (
+                                                                                <li key={i}>
+                                                                                    <span className="text-[#0969da] font-medium">[{change.type}]</span> {change.text}
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-gray-400 italic">No changelog data available.</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })()}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                </div>
             </div>
-        </div>
 
-            {/* Manage Repositories Dialog */ }
-    <ManageRepositoriesDialog
-        isOpen={isManageReposOpen}
-        onClose={() => setIsManageReposOpen(false)}
-        projectId={id}
-        currentRepositoryIds={project?.repository_ids || []}
-        onSave={(newRepositoryIds) => {
-            // Refresh repositories after save
-            fetch(`http://localhost:8000/api/v1/projects/${id}/repositories`)
-                .then(res => res.json())
-                .then(reposData => {
-                    const mappedRepos: Repository[] = reposData.map((r: any) => ({
-                        id: String(r.id),
-                        name: r.name,
-                        url: r.url,
-                        isCloned: r.status === "Cloned",
-                        commitAnalysis: { status: r.commit_analysis || "Not Started" },
-                        repoScan: { status: r.repo_scan || "Not Started" },
-                        createdAt: r.added_at,
-                        commits_count: r.commits_count,
-                        vulnerabilities_count: r.vulnerabilities_count
-                    }));
-                    setRepositories(mappedRepos);
-                    // Update project with new repository_ids
-                    if (project) {
-                        setProject({ ...project, repository_ids: newRepositoryIds });
-                    }
-                })
-                .catch(err => console.error("Error refreshing repositories:", err));
-        }}
-    />
+            {/* Manage Repositories Dialog */}
+            <ManageRepositoriesDialog
+                isOpen={isManageReposOpen}
+                onClose={() => setIsManageReposOpen(false)}
+                projectId={id}
+                currentRepositoryIds={project?.repository_ids || []}
+                onSave={(newRepositoryIds) => {
+                    // Refresh repositories after save
+                    fetch(`http://localhost:8000/api/v1/projects/${id}/repositories`)
+                        .then(res => res.json())
+                        .then(reposData => {
+                            const mappedRepos: Repository[] = reposData.map((r: any) => ({
+                                id: String(r.id),
+                                name: r.name,
+                                url: r.url,
+                                isCloned: r.status === "Cloned",
+                                commitAnalysis: { status: r.commit_analysis || "Not Started" },
+                                repoScan: { status: r.repo_scan || "Not Started" },
+                                createdAt: r.added_at,
+                                commits_count: r.commits_count,
+                                vulnerabilities_count: r.vulnerabilities_count
+                            }));
+                            setRepositories(mappedRepos);
+                            // Update project with new repository_ids
+                            if (project) {
+                                setProject({ ...project, repository_ids: newRepositoryIds });
+                            }
+                        })
+                        .catch(err => console.error("Error refreshing repositories:", err));
+                }}
+            />
         </div >
     );
 }

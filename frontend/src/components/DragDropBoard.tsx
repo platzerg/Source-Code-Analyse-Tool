@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, DragOverEvent, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Plus, GripVertical, User, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,10 +11,10 @@ import CreateTaskDialog from "@/components/CreateTaskDialog";
 interface Task {
     id: string;
     title: string;
-    status: string;
+    status: 'Todo' | 'In Progress' | 'Done';
     assignee: string;
-    priority: string;
-    due_date: string;
+    priority: 'Low' | 'Medium' | 'High' | 'Critical';
+    dueDate: string;
 }
 
 interface DragDropBoardProps {
@@ -65,7 +65,7 @@ function DraggableTask({ task }: { task: Task }) {
                         </div>
                         <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            <span>{task.due_date}</span>
+                            <span>{task.dueDate}</span>
                         </div>
                     </div>
                     <div className="mt-2">
@@ -112,6 +112,13 @@ export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragD
     const [activeId, setActiveId] = useState<string | null>(null);
     const [overId, setOverId] = useState<string | null>(null);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Moved mounted check to bottom to avoid hook errors
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -158,34 +165,92 @@ export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragD
     };
 
     const handleDragEnd = async (event: DragEndEvent) => {
-        const { active } = event;
-        const taskId = active.id as string;
-        const newStatus = overId;
+        const { active, over } = event;
 
+        if (!over) {
+            setActiveId(null);
+            setOverId(null);
+            return;
+        }
+
+        const activeId = active.id as string;
+        const overId = over.id as string;
+
+        // Reset drag state
         setActiveId(null);
         setOverId(null);
 
-        if (!newStatus) return;
+        // Find active task
+        const activeTask = tasks.find(t => t.id === activeId);
+        if (!activeTask) return;
 
-        // Find the task
-        const task = tasks.find((t) => t.id === taskId);
-        if (!task || task.status === newStatus) return;
+        // 1. Determine new Status
+        let newStatus = activeTask.status;
 
-        // Update task status locally
-        const updatedTasks = tasks.map((t) =>
-            t.id === taskId ? { ...t, status: newStatus } : t
-        );
-        onTasksUpdate(updatedTasks);
+        // Check if over is a column
+        const overColumn = columns.find(col => col.id === overId);
+        if (overColumn) {
+            newStatus = overColumn.id as Task['status'];
+            // If dropping on a column container directly, we usually append to end, 
+            // but the arrayMove logic below handles "position" better if we treat it as reordering the whole list?
+            // Actually, if moving to empty column, we just change status.
+        } else {
+            // Over another task
+            const overTask = tasks.find(t => t.id === overId);
+            if (overTask) {
+                newStatus = overTask.status;
+            }
+        }
 
-        // Update backend
-        try {
-            await fetch(`http://localhost:8000/api/v1/projects/${projectId}/tasks/${taskId}/status?status=${encodeURIComponent(newStatus)}`, {
-                method: "PUT",
-            });
-        } catch (error) {
-            console.error("Error updating task status:", error);
-            // Revert on error
-            onTasksUpdate(tasks);
+        // 2. Reorder Logic
+        if (activeId !== overId) {
+            const oldIndex = tasks.findIndex(t => t.id === activeId);
+            const newIndex = tasks.findIndex(t => t.id === overId);
+
+            let newTasks = [...tasks];
+
+            // If changing status, we update the status first
+            if (activeTask.status !== newStatus) {
+                // If we are over a column, we might not have a valid 'overId' that is a task index.
+                // In that case newIndex might be -1.
+
+                // Construct updated task
+                const updatedTask = { ...activeTask, status: newStatus };
+
+                // Replace in array
+                newTasks[oldIndex] = updatedTask; // Temporarily update in place
+
+                // If we dropped over another task, we might want to move it to that position too.
+                // But mixing "change status" and "move index" on a flat array is complex.
+                // Simplified strategy: Update status, and if dropped on a task, move to that task's index.
+
+                if (newIndex !== -1) {
+                    newTasks = arrayMove(newTasks, oldIndex, newIndex);
+                } else {
+                    // Dropped on column (empty or end), just move to end of that column visually?
+                    // In a flat list, order matters relative to others. 
+                    // Moving to end of array might put it at end of column.
+                    newTasks = arrayMove(newTasks, oldIndex, newTasks.length - 1);
+                }
+            } else {
+                // Same column reordering
+                if (newIndex !== -1) {
+                    newTasks = arrayMove(tasks, oldIndex, newIndex);
+                }
+            }
+
+            onTasksUpdate(newTasks);
+
+            // Backend Update (Status only for now, unless we add position API)
+            if (activeTask.status !== newStatus) {
+                try {
+                    await fetch(`http://localhost:8000/api/v1/projects/${projectId}/tasks/${activeId}/status?status=${encodeURIComponent(newStatus)}`, {
+                        method: "PUT",
+                    });
+                } catch (error) {
+                    console.error("Error updating task status:", error);
+                }
+            }
         }
     };
 
@@ -199,6 +264,8 @@ export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragD
     };
 
     const activeTask = activeId ? tasks.find((t) => t.id === activeId) : null;
+
+    if (!mounted) return null;
 
     return (
         <div className="space-y-6">
