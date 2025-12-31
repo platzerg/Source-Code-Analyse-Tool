@@ -2,7 +2,7 @@
     "menu_visibility": {
         "project_tabs": {
             "repositories": true,
-            "backlog": true,
+            "backlog": false,
             "board": true,
             "roadmap": true,
             "insights": false

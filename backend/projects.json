@@ -10,7 +10,7 @@
             {
                 "id": "1",
                 "title": "Implement Authentication Flow",
-                "status": "Done",
+                "status": "In Progress",
                 "assignee": "Sarah Chen",
                 "priority": "High",
                 "due_date": "2025-12-15"
@@ -34,7 +34,7 @@
             {
                 "id": "4",
                 "title": "Complete task dynamization",
-                "status": "In Progress",
+                "status": "Todo",
                 "assignee": "Sarah Chen",
                 "priority": "High",
                 "due_date": "2025-12-28"
@@ -157,7 +157,7 @@
             {
                 "id": "t1",
                 "title": "Requirements Gathering",
-                "status": "In Progress",
+                "status": "t1",
                 "assignee": "Sarah Johnson",
                 "priority": "High",
                 "due_date": "2025-02-15"
@@ -177,6 +177,46 @@
                 "assignee": "Alex Kim",
                 "priority": "Medium",
                 "due_date": "2025-02-20"
+            },
+            {
+                "id": "t1767175823006",
+                "title": "Design Login Screen",
+                "status": "t1",
+                "assignee": "Sarah Chen",
+                "priority": "High",
+                "due_date": "2025-12-31"
+            },
+            {
+                "id": "t1767176023884",
+                "title": "Design Login Screen",
+                "status": "t1",
+                "assignee": "Sarah Chen",
+                "priority": "High",
+                "due_date": "2025-12-31"
+            },
+            {
+                "id": "t1767176220259",
+                "title": "Test Drag Drop",
+                "status": "t1767176220259",
+                "assignee": "Test User",
+                "priority": "Medium",
+                "due_date": "2025-12-31"
+            },
+            {
+                "id": "t1767176341449",
+                "title": "Test Drag Drop 2",
+                "status": "t1",
+                "assignee": "Unassigned",
+                "priority": "Medium",
+                "due_date": "2025-12-31"
+            },
+            {
+                "id": "t1767176615446",
+                "title": "Final Test",
+                "status": "Done",
+                "assignee": "John Doe",
+                "priority": "High",
+                "due_date": "2025-12-31"
             }
         ],
         "milestones": [

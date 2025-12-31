@@ -664,3 +664,43 @@ def get_project_repositories(project_id: int):
     project_repos = [r for r in all_repos if r.id in (project.repository_ids or [])]
     
     return project_repos
+
+# Task Management Endpoints
+@router.post("/projects/{project_id}/tasks")
+def create_task(project_id: int, task: ProjectTask):
+    """Create a new task in a project"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if not project.tasks:
+        project.tasks = []
+    
+    project.tasks.append(task)
+    save_projects(projects)
+    
+    return task
+
+@router.put("/projects/{project_id}/tasks/{task_id}/status")
+def update_task_status(project_id: int, task_id: str, status: str):
+    """Update task status (for drag-drop)"""
+    from fastapi import HTTPException
+    
+    projects = load_projects()
+    project = next((p for p in projects if p.id == project_id), None)
+    
+    if not project or not project.tasks:
+        raise HTTPException(status_code=404, detail="Project or tasks not found")
+    
+    task = next((t for t in project.tasks if t.id == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    task.status = status
+    save_projects(projects)
+    
+    return {"message": "Task status updated", "task_id": task_id, "status": status}
