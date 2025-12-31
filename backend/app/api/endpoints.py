@@ -540,3 +540,91 @@ async def get_project_insights(project_id: int):
             }
         )
     ]
+
+# Overview and Settings endpoints
+OVERVIEW_FILE = "overview.json"
+SETTINGS_FILE = "settings.json"
+
+def load_overview():
+    if not os.path.exists(OVERVIEW_FILE):
+        return {
+            "system_status": {
+                "operational": True,
+                "message": "All systems operational. Backend connected.",
+                "last_updated": datetime.now().isoformat()
+            },
+            "stats": {
+                "total_projects": 0,
+                "total_repositories": 0,
+                "active_projects": 0,
+                "cloned_repositories": 0
+            }
+        }
+    try:
+        with open(OVERVIEW_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def load_settings():
+    if not os.path.exists(SETTINGS_FILE):
+        return {
+            "menu_visibility": {
+                "project_tabs": {
+                    "repositories": True,
+                    "backlog": True,
+                    "board": True,
+                    "roadmap": True,
+                    "insights": True
+                },
+                "repository_tabs": {
+                    "overview": True,
+                    "technologies": True,
+                    "ask_questions": True,
+                    "prompt_generation": True,
+                    "code_flows": True,
+                    "team_staffing": True,
+                    "code_quality": True,
+                    "dependencies": True,
+                    "security": True,
+                    "pull_requests": True,
+                    "feature_map": True,
+                    "ai_features": True
+                }
+            }
+        }
+    try:
+        with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_settings(settings: dict):
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=4, ensure_ascii=False)
+
+@router.get("/overview")
+def get_overview():
+    """Get dashboard overview data including system status"""
+    overview = load_overview()
+    # Update stats dynamically
+    projects = load_projects()
+    repositories = load_repositories()
+    overview["stats"] = {
+        "total_projects": len(projects),
+        "total_repositories": len(repositories),
+        "active_projects": len([p for p in projects if p.status == "Active"]),
+        "cloned_repositories": len([r for r in repositories if r.status == "Cloned"])
+    }
+    return overview
+
+@router.get("/settings")
+def get_settings():
+    """Get application settings including menu visibility"""
+    return load_settings()
+
+@router.post("/settings")
+def update_settings(settings: dict):
+    """Update application settings"""
+    save_settings(settings)
+    return {"message": "Settings updated successfully"}

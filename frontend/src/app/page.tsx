@@ -25,18 +25,34 @@ interface Repository {
     main_branch?: string;
 }
 
+interface OverviewData {
+    system_status: {
+        operational: boolean;
+        message: string;
+        last_updated: string;
+    };
+    stats: {
+        total_projects: number;
+        total_repositories: number;
+        active_projects: number;
+        cloned_repositories: number;
+    };
+}
+
 export default function Dashboard() {
     const [activeTab, setActiveTab] = useState("overview");
     const [projects, setProjects] = useState<Project[]>([]);
     const [repositories, setRepositories] = useState<Repository[]>([]);
+    const [overview, setOverview] = useState<OverviewData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [projectsRes, reposRes] = await Promise.all([
+                const [projectsRes, reposRes, overviewRes] = await Promise.all([
                     fetch("http://localhost:8000/api/v1/projects"),
-                    fetch("http://localhost:8000/api/v1/repositories")
+                    fetch("http://localhost:8000/api/v1/repositories"),
+                    fetch("http://localhost:8000/api/v1/overview")
                 ]);
 
                 if (projectsRes.ok) {
@@ -47,6 +63,11 @@ export default function Dashboard() {
                 if (reposRes.ok) {
                     const reposData = await reposRes.json();
                     setRepositories(reposData);
+                }
+
+                if (overviewRes.ok) {
+                    const overviewData = await overviewRes.json();
+                    setOverview(overviewData);
                 }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
@@ -151,11 +172,13 @@ export default function Dashboard() {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900">System Status</h3>
-                                        <p className="text-sm text-gray-500">All systems operational. Backend connected.</p>
+                                        <p className="text-sm text-gray-500">
+                                            {overview?.system_status?.message || "All systems operational. Backend connected."}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="text-sm text-gray-400">
-                                    Updated: {new Date().toLocaleDateString()}
+                                    Updated: {overview?.system_status?.last_updated ? new Date(overview.system_status.last_updated).toLocaleString() : new Date().toLocaleDateString()}
                                 </div>
                             </CardContent>
                         </Card>

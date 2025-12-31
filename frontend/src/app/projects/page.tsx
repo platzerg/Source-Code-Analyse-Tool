@@ -122,8 +122,8 @@ export default function ProjectsPage() {
                                     </div>
                                     <span className={cn(
                                         "text-[10px] uppercase font-bold px-2 py-0.5 rounded-sm",
-                                        project.status === 'active' ? "bg-emerald-100 text-emerald-700" :
-                                            project.status === 'planning' ? "bg-blue-100 text-blue-700" :
+                                        project.status.toLowerCase() === 'active' ? "bg-emerald-100 text-emerald-700" :
+                                            project.status.toLowerCase() === 'planning' ? "bg-blue-100 text-blue-700" :
                                                 "bg-gray-100 text-gray-600"
                                     )}>
                                         {project.status}

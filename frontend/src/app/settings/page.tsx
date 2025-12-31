@@ -31,11 +31,28 @@ export default function GlobalSettingsPage() {
 
     // Load settings on mount
     useEffect(() => {
-        const savedProjectTabs = localStorage.getItem('project_tabs');
-        if (savedProjectTabs) setProjectTabs(JSON.parse(savedProjectTabs));
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch("http://localhost:8000/api/v1/settings");
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.menu_visibility) {
+                        setProjectTabs(data.menu_visibility.project_tabs);
+                        setRepoTabs(data.menu_visibility.repository_tabs);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading settings:", error);
+                // Fallback to localStorage
+                const savedProjectTabs = localStorage.getItem('project_tabs');
+                if (savedProjectTabs) setProjectTabs(JSON.parse(savedProjectTabs));
 
-        const savedRepoTabs = localStorage.getItem('repo_tabs');
-        if (savedRepoTabs) setRepoTabs(JSON.parse(savedRepoTabs));
+                const savedRepoTabs = localStorage.getItem('repo_tabs');
+                if (savedRepoTabs) setRepoTabs(JSON.parse(savedRepoTabs));
+            }
+        };
+
+        fetchSettings();
     }, []);
 
     const toggleProjectTab = (id: string) => {
@@ -46,19 +63,41 @@ export default function GlobalSettingsPage() {
         setRepoTabs(prev => ({ ...prev, [id]: !prev[id as keyof typeof prev] }));
     };
 
-    const saveVisibilitySettings = () => {
-        localStorage.setItem('project_tabs', JSON.stringify(projectTabs));
-        localStorage.setItem('repo_tabs', JSON.stringify(repoTabs));
+    const saveVisibilitySettings = async () => {
+        try {
+            // Save to backend
+            const response = await fetch("http://localhost:8000/api/v1/settings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    menu_visibility: {
+                        project_tabs: projectTabs,
+                        repository_tabs: repoTabs
+                    }
+                })
+            });
 
-        // Show success message
-        const button = document.activeElement as HTMLButtonElement;
-        const originalText = button.innerHTML;
-        button.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Saved!';
-        button.disabled = true;
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }, 2000);
+            if (response.ok) {
+                // Also save to localStorage as backup
+                localStorage.setItem('project_tabs', JSON.stringify(projectTabs));
+                localStorage.setItem('repo_tabs', JSON.stringify(repoTabs));
+
+                // Show success message
+                const button = document.activeElement as HTMLButtonElement;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Saved!';
+                button.disabled = true;
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            alert("Failed to save settings. Please try again.");
+        }
     };
 
     return (

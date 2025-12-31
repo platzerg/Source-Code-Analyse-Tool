@@ -89,7 +89,7 @@
         "description": "Complete migration from monolith to microservices architecture",
         "owner": "Platform Team",
         "start_date": "2024-01-15",
-        "status": "Active",
+        "status": "Inactive",
         "tasks": [
             {
                 "id": "t1",
@@ -158,6 +158,67 @@
             "active_issues": 87,
             "open_prs": 23,
             "contributors": 18
+        }
+    },
+    {
+        "id": 3,
+        "name": "Mobile App Development",
+        "description": "Native mobile application for iOS and Android platforms",
+        "owner": "Mobile Team",
+        "start_date": "2025-02-01",
+        "status": "Planning",
+        "tasks": [
+            {
+                "id": "t1",
+                "title": "Requirements Gathering",
+                "status": "In Progress",
+                "assignee": "Sarah Johnson",
+                "priority": "High",
+                "due_date": "2025-02-15"
+            },
+            {
+                "id": "t2",
+                "title": "UI/UX Design",
+                "status": "To Do",
+                "assignee": "Mike Chen",
+                "priority": "High",
+                "due_date": "2025-03-01"
+            },
+            {
+                "id": "t3",
+                "title": "Technology Stack Selection",
+                "status": "To Do",
+                "assignee": "Alex Kim",
+                "priority": "Medium",
+                "due_date": "2025-02-20"
+            }
+        ],
+        "milestones": [
+            {
+                "label": "Planning Phase",
+                "progress": 40,
+                "quarter": "Q1 2025"
+            },
+            {
+                "label": "Design Phase",
+                "progress": 0,
+                "quarter": "Q1 2025"
+            },
+            {
+                "label": "Development Phase",
+                "progress": 0,
+                "quarter": "Q2 2025"
+            },
+            {
+                "label": "Testing & Launch",
+                "progress": 0,
+                "quarter": "Q3 2025"
+            }
+        ],
+        "stats": {
+            "active_issues": 12,
+            "open_prs": 0,
+            "contributors": 5
         }
     }
 ]
