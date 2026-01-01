@@ -151,7 +151,55 @@ Global configuration for the application.
 
 ## 📋 Getting Started
 
-### Prerequisites
+You can run the application either with **Docker** (recommended for production) or **locally** (for development).
+
+### Option 1: Docker Deployment (Recommended)
+
+The easiest way to get started. Requires only Docker installed.
+
+#### Prerequisites
+- Docker Desktop (Windows/Mac) or Docker Engine (Linux)
+- Docker Compose (included with Docker Desktop)
+
+#### Quick Start
+```powershell
+# Clone the repository
+git clone https://github.com/platzerg/Source-Code-Analyse-Tool.git
+cd Source-Code-Analyse-Tool
+
+# (Optional) Configure Langfuse for observability
+# Create a .env file in the project root:
+# LANGFUSE_PUBLIC_KEY=pk-lf-...
+# LANGFUSE_SECRET_KEY=sk-lf-...
+# LANGFUSE_HOST=https://cloud.langfuse.com
+
+# Build and start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+```
+
+**Access the application:**
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8000`
+- API Documentation: `http://localhost:8000/docs`
+
+**Docker Features:**
+- ✅ One-command deployment
+- ✅ Isolated environment
+- ✅ Automatic health checks
+- ✅ Data persistence via volumes
+- ✅ Production-ready configuration
+
+### Option 2: Local Development Setup
+
+For development with hot-reload and debugging.
+
+#### Prerequisites
 - Python 3.12 or higher
 - Node.js 18 or higher
 - npm or yarn
@@ -200,35 +248,6 @@ cd frontend
 npm run dev
 ```
 The application will be available at `http://localhost:3000`.
-
-### Running with Docker
-
-For production deployment or easier setup, use Docker Compose:
-
-```powershell
-# Build and start all services
-docker compose up -d
-
-# View logs
-docker compose logs -f
-
-# Stop all services
-docker compose down
-```
-
-**Services:**
-- Backend API: `http://localhost:8000`
-- Frontend: `http://localhost:3000`
-
-**Optional Langfuse Configuration:**
-Create a `.env` file in the project root:
-```env
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_HOST=https://cloud.langfuse.com
-```
-
-Then restart: `docker compose up -d`
 
 ## 📂 Project Structure
 
