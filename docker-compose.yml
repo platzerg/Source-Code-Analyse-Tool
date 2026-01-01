@@ -8,13 +8,12 @@ services:
       - "8359:8000"
     environment:
       # Langfuse Observability (optional)
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
       - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
     volumes:
-      # Mount data files for persistence
-      - ./backend/projects.json:/app/projects.json
-      - ./backend/repositories.json:/app/repositories.json
+      # Mount data directory for persistence (avoids bind mount inode issues with atomic writes)
+      - ./backend:/app/data
     healthcheck:
       test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/v1/health', timeout=5)" ]
       interval: 30s
@@ -27,13 +26,13 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8359
+        NEXT_PUBLIC_API_URL: ""
     container_name: source-code-analysis-frontend
     restart: always
     ports:
       - "3509:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8359
+      - NEXT_PUBLIC_API_URL=
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/" ]
       interval: 30s

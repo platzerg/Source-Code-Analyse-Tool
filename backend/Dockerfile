@@ -21,11 +21,20 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
+# Copy application code
 COPY . .
+
+# Create data directory and files if they don't exist
+RUN mkdir -p /app/data && \
+    touch /app/data/projects.json && \
+    touch /app/data/repositories.json && \
+    touch /app/data/settings.json && \
+    touch /app/data/overview.json
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app && \
-    chown -R appuser:appuser /home/appuser
+    chown -R appuser:appuser /home/appuser && \
+    chown -R appuser:appuser /app/data
 
 # Switch to non-root user
 USER appuser

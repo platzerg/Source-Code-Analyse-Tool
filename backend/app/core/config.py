@@ -4,8 +4,10 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Data Files
-DATA_DIR = os.path.join(BASE_DIR, "") # Currently data files are in root of backend for some reason
-# Adjusting to be explicit:
+# Data Files
+# Use /app/data for Docker persistence if it exists, else local directory
+DATA_DIR = "/app/data" if os.path.exists("/app/data") else os.path.join(BASE_DIR, "")
+
 PROJECTS_FILE = os.path.join(DATA_DIR, "projects.json")
 REPOSITORIES_FILE = os.path.join(DATA_DIR, "repositories.json")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
