@@ -201,6 +201,35 @@ npm run dev
 ```
 The application will be available at `http://localhost:3000`.
 
+### Running with Docker
+
+For production deployment or easier setup, use Docker Compose:
+
+```powershell
+# Build and start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+```
+
+**Services:**
+- Backend API: `http://localhost:8000`
+- Frontend: `http://localhost:3000`
+
+**Optional Langfuse Configuration:**
+Create a `.env` file in the project root:
+```env
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+Then restart: `docker compose up -d`
+
 ## 📂 Project Structure
 
 - `backend/`: FastAPI application, API endpoints, and local data storage.

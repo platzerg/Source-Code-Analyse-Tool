@@ -1,0 +1,44 @@
+services:
+  # Backend API Service
+  backend:
+    build: ./backend
+    container_name: source-code-analysis-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # Langfuse Observability (optional)
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+    volumes:
+      # Mount data files for persistence
+      - ./backend/projects.json:/app/projects.json
+      - ./backend/repositories.json:/app/repositories.json
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/v1/health', timeout=5)" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: source-code-analysis-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      - backend
+
+volumes:
+  backend-data:
