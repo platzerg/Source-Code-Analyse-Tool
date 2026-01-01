@@ -80,6 +80,49 @@ A modern web application designed to analyze and manage source code repositories
 - **Interactive Roadmap**: Timeline-based Gantt chart with drag-and-drop scheduling.
 - **Real-time Status**: Live streaming of repository cloning and scanning progress.
 
+## 🗺️ Application Navigation & Structure
+
+The application is organized into four main sections. Below is a complete breakdown of every menu and tab available in the system.
+
+### 1. 🏠 Dashboard (`/`)
+Central hub for system-wide monitoring and status.
+- **Tabs**:
+  - **Overview**: High-level metrics including Total Projects, Active Projects, Total Repositories, and System Status.
+  - **Status**: Real-time status list of all active projects and repositories with their current scan/analysis state.
+
+### 2. 📁 Projects (`/projects`)
+Manage your source code projects.
+- **Main View**: List of all projects with "Add Project" functionality.
+- **Project Detail View** (`/projects/[id]`):
+  - **Repositories**: List of repositories linked to this project with key stats (contributors, issues, PRs).
+  - **Backlog**: Task management table with filtering, priority sorting, and assignment.
+  - **Board**: Kanban board with drag-and-drop tasks grouped by status (Todo, In Progress, Done).
+  - **Roadmap**: Interactive Gantt chart for milestone planning and timeline visualization.
+  - **Insights**: Deep analytics including Tech Debt Ratio, Contributor Analysis, Code Churn, and automated Changelog generation.
+
+### 3. 📦 Repositories (`/repositories`)
+Manage individual code repositories and view deep technical analysis.
+- **Main View**: List of all repositories with status indicators (Cloned, Scanned, Error).
+- **Repository Detail View** (`/repositories/[id]`):
+  - **Overview**: Executive summary, "Stack Complexity Analysis", "AI-Assisted Development Impact", and high-level risk assessment.
+  - **Technologies**: Breakdown of languages and frameworks used (FTE estimation, commit activity).
+  - **Ask Questions**: AI Chat interface for querying the codebase context.
+  - **Prompt Generation**: Feature to generate implementation prompts for new requirements.
+  - **Code Flows**: Visual flowcharts of code logic and application scenarios.
+  - **Team Staffing**: AI-driven team composition recommendations based on required skills.
+  - **Code Quality**: Analysis of dead code, duplication blocks, and cyclomatic complexity.
+  - **Dependencies**: Visualization of internal/external dependencies and circular dependency detection.
+  - **Security**: Vulnerability reporting, secret detection, and compliance checks.
+  - **Pull Requests**: List of recent pull requests and their status.
+  - **Feature Map**: Node-based visualization of feature relationships within the codebase.
+  - **AI Features**: Hub for advanced AI tools (Auto-Documentation, Bug Prediction, Reviewer).
+
+### 4. ⚙️ Settings (`/settings`)
+Global configuration for the application.
+- **Menu Visibility**:
+  - **Project Pages**: Toggle visibility for Repositories, Backlog, Board, Roadmap, and Insights tabs.
+  - **Repository Pages**: Toggle visibility for all 12 repository analysis tabs (Overview, Technologies, Security, etc.).
+
 ## 🛠 Tech Stack
 
 ### Backend
@@ -93,93 +136,6 @@ A modern web application designed to analyze and manage source code repositories
 - **Styling**: Tailwind CSS
 - **Components**: Lucide Icons, Custom UI components
 - **State Management**: React Hooks & Fetch API
-
-## 📊 Data Sources & Architecture
-
-This application is **100% dynamized**, meaning all displayed data is fetched from the backend API and stored in JSON files. Below is a comprehensive overview of all tabs and their data sources.
-
-### Backend Data Storage
-- **`projects.json`**: Stores all project-level data (tasks, milestones, stats, insights)
-- **`repositories.json`**: Stores all repository-level data (analysis, security, AI features, etc.)
-
-### Dashboard (`/`)
-| Tab | Data Source | JSON Fields Used |
-|-----|-------------|------------------|
-| **Overview** | `projects.json` + `repositories.json` | `projects[]`, `repositories[]`, `status` |
-| **Status** | `projects.json` + `repositories.json` | `projects[].name`, `projects[].status`, `repositories[].name`, `repositories[].repo_scan` |
-
-### Projects View (`/projects`)
-| Section | Data Source | JSON Fields Used |
-|---------|-------------|------------------|
-| **Project List** | `projects.json` | `projects[].id`, `projects[].name`, `projects[].description`, `projects[].status`, `projects[].start_date` |
-
-### Project Detail Page (`/projects/[id]`)
-| Tab | Data Source | JSON Fields Used | Hardcoded/Client-Side Data |
-|-----|-------------|------------------|---------------------------|
-| **Repositories** | `projects.json` + `repositories.json` | `projects[].stats.active_issues`, `projects[].stats.open_prs`, `projects[].stats.contributors`, `repositories[].commits_count`, `repositories[].vulnerabilities_count` | Repository filtering logic |
-| **Backlog** | `projects.json` | `projects[].tasks[]` (id, title, status, assignee, priority, due_date) | Task filtering by status |
-| **Board** | `projects.json` | `projects[].tasks[]` | Kanban column grouping (To Do, In Progress, Done) |
-| **Roadmap** | `projects.json` | `projects[].milestones[]` (label, progress, date, end_date) | Gantt timeline visualization with drag-and-drop |
-| **Insights** | `/api/v1/projects/{id}/insights` | `insights[]` (type: contributors, churn, debt, deployment, changelog) | Chart rendering (Recharts) |
-
-### Repositories View (`/repositories`)
-| Section | Data Source | JSON Fields Used |
-|---------|-------------|------------------|
-| **Repository List** | `repositories.json` | `repositories[].id`, `repositories[].name`, `repositories[].url`, `repositories[].status`, `repositories[].repo_scan`, `repositories[].added_at` |
-
-### Repository Detail Page (`/repositories/[id]`)
-| Tab | Data Source | JSON Fields Used | Hardcoded/Client-Side Data |
-|-----|-------------|------------------|---------------------------|
-| **Overview** | `repositories.json` | `overview_analysis.stack_complexity_text`, `overview_analysis.ai_impact_text`, `overview_analysis.recommendations[]`, `overview_analysis.project_state` | None |
-| **Technologies** | `repositories.json` | `tech_stack[]` (name, fte, commits, complexity, color) | Chart rendering, color mapping |
-| **Ask Questions** | `repositories.json` | `chat_history[]` (id, title, text, date) | Chat UI, message formatting |
-| **Prompt Generation** | `repositories.json` | `feature_requests[]` (id, title, description, date, status, complexity, type, summary, identifiedFiles, prompt) | Loading animation states, prompt formatting |
-| **Code Flows** | `repositories.json` | `code_flow_requests[]` (id, title, description, date, status), `code_flows.nodes[]`, `code_flows.edges[]` | ReactFlow rendering, initial hardcoded nodes/edges (fallback) |
-| **Team Staffing** | `repositories.json` | `team_staffing[]` (id, title, level, initials, skills, fte, description) | Avatar generation, skill badges |
-| **Code Quality** | `repositories.json` | `dead_code[]`, `duplication_blocks[]`, `complexity_by_file[]`, `test_coverage` | Complexity calculations, chart rendering |
-| **Dependencies** | `repositories.json` | `dependency_stats`, `dependency_graph.nodes[]`, `dependency_graph.edges[]`, `circular_dependencies[]`, `import_export_analysis[]` | ReactFlow rendering, graph layout |
-| **Security** | `repositories.json` | `vulnerabilities[]`, `secrets[]`, `compliance[]`, `security_score` | Severity color coding, compliance status icons |
-| **Pull Requests** | `repositories.json` | `pull_requests[]` (id, title, status, author, date, files_changed, additions, deletions) | Status badges, date formatting |
-| **Feature Map** | `repositories.json` | `feature_map.nodes[]`, `feature_map.edges[]` | ReactFlow rendering, node positioning |
-| **AI Features** | `/api/v1/repositories/{id}/ai-features` | Dynamic endpoint (not in JSON) | Placeholder UI, feature cards |
-
-### Settings Page (`/settings`)
-| Section | Data Source | JSON Fields Used | Hardcoded/Client-Side Data |
-|---------|-------------|------------------|---------------------------|
-| **Menu Visibility** | None | None | `localStorage` (client-side persistence) |
-
-### Data Not Sourced from JSON Files
-
-The following UI elements and features are **not** stored in `projects.json` or `repositories.json`:
-
-1. **Client-Side State Management**:
-   - Tab visibility settings (stored in `localStorage`)
-   - Active tab selection
-   - Dialog/modal open states
-   - Form input values
-
-2. **Hardcoded UI Elements**:
-   - Navigation menu structure
-   - Tab names and icons
-   - Color schemes and styling
-   - Loading animations and spinners
-   - Empty state messages
-
-3. **Computed/Derived Data**:
-   - Chart visualizations (rendered from JSON data using Recharts)
-   - ReactFlow graph layouts (positions computed from node/edge data)
-   - Date formatting and relative time displays
-   - Aggregated statistics (e.g., total issues, average complexity)
-   - Filtered/sorted lists
-
-4. **Fallback/Initial Data**:
-   - Initial ReactFlow nodes/edges in Code Flows tab (lines 79-94 in `repositories/[id]/page.tsx`)
-   - Loading step animations for AI features
-
-5. **Future/Placeholder Features**:
-   - `/api/v1/repositories/{id}/ai-features` endpoint (not yet implemented in JSON)
-   - Auto-fix buttons (UI only, no backend logic)
-   - Edit/Regenerate buttons in AI features
 
 ## 📋 Getting Started
 

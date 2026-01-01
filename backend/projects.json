@@ -10,7 +10,7 @@
             {
                 "id": "1",
                 "title": "Implement Authentication Flow",
-                "status": "In Progress",
+                "status": "Done",
                 "assignee": "Sarah Chen",
                 "priority": "High",
                 "due_date": "2025-12-15"
@@ -42,7 +42,7 @@
             {
                 "id": "t1767177401560",
                 "title": "ggg",
-                "status": "Todo",
+                "status": "In Progress",
                 "assignee": "fff",
                 "priority": "Medium",
                 "due_date": "2025-12-31"
@@ -58,20 +58,14 @@
         ],
         "milestones": [
             {
-                "label": "R2",
-                "progress": 94,
-                "date": "2025-07-03",
-                "end_date": "2026-02-14"
-            },
-            {
                 "label": "v3.0 Final",
-                "progress": 94,
-                "date": "2025-03-18",
-                "end_date": "2025-09-30"
+                "progress": 98,
+                "date": "2025-09-02",
+                "end_date": "2026-12-17"
             },
             {
                 "label": "Test Milestone",
-                "progress": 36,
+                "progress": 85,
                 "date": "2025-09-12",
                 "end_date": "2025-11-20"
             },
@@ -83,9 +77,39 @@
             },
             {
                 "label": "v0.1 Alpha",
+                "progress": 93,
+                "date": "2025-06-02",
+                "end_date": "2026-01-06"
+            },
+            {
+                "label": "Verification Milestone",
                 "progress": 0,
-                "date": "2025-01-15",
-                "end_date": "2025-02-15"
+                "date": "2025-09-12",
+                "end_date": "2025-12-10"
+            },
+            {
+                "label": "Test1",
+                "progress": 100,
+                "date": "2025-10-11",
+                "end_date": "2026-01-17"
+            },
+            {
+                "label": "Test 2",
+                "progress": 99,
+                "date": "2025-10-26",
+                "end_date": "2026-02-22"
+            },
+            {
+                "label": "h",
+                "progress": 100,
+                "date": "2025-06-18",
+                "end_date": "2026-02-26"
+            },
+            {
+                "label": "M3",
+                "progress": 92,
+                "date": "2025-09-16",
+                "end_date": "2026-01-17"
             }
         ],
         "stats": {
@@ -108,7 +132,7 @@
             {
                 "id": "t1",
                 "title": "API Gateway Implementation",
-                "status": "Todo",
+                "status": "In Progress",
                 "assignee": "Alice Chen",
                 "priority": "High",
                 "due_date": "2024-12-01"

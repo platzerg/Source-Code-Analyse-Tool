@@ -6,6 +6,7 @@ import { Plus, GripVertical, Calendar, Settings2, RotateCcw } from "lucide-react
 import CreateMilestoneDialog from "@/components/CreateMilestoneDialog";
 import * as Popover from '@radix-ui/react-popover';
 import { Trash2, Edit, MoreHorizontal, GripHorizontal } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Milestone {
     label: string;
@@ -43,6 +44,7 @@ function formatDate(dateStr: string): string {
 
 
 export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpdate }: DragDropRoadmapProps) {
+    const { t } = useTranslation();
     const [activeId, setActiveId] = useState<string | null>(null);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -83,9 +85,14 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             return { startDate: start, endDate: end };
         }
 
-        const dates = milestones.map(m => new Date(m.date));
-        const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-        const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+        const allDates = milestones.flatMap(m => {
+            const dates = [new Date(m.date)];
+            if (m.end_date) dates.push(new Date(m.end_date));
+            return dates;
+        });
+
+        const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
+        const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
 
         // Add padding (3 months before and after)
         const start = new Date(minDate);
@@ -110,7 +117,10 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
         // Safety check to prevent infinite loop if range is invalid
         if (totalMs <= 0) return [];
 
-        while (current <= timelineConfig.endDate) {
+        // Loop until we reach the end date
+        // Use a safety counter to prevent infinite loops in case of weird date math
+        let safetyCounter = 0;
+        while (current <= timelineConfig.endDate && safetyCounter < 1000) {
             // Only add if within range (or close enough)
             if (current >= timelineConfig.startDate) {
                 const { quarter, year } = getQuarterInfo(current);
@@ -124,6 +134,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             }
 
             current.setMonth(current.getMonth() + 3);
+            safetyCounter++;
         }
 
         return markers;
@@ -150,6 +161,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
                 endPercent = ((endDate.getTime() - timelineConfig.startDate.getTime()) / totalMs) * 100;
                 widthPercent = endPercent - startPercent;
             }
+
 
             // Visibility check (looser for ranges)
             if (m.end_date) {
@@ -239,7 +251,49 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
     // I will leave the Drag Logic placeholder to be properly implemented or fixed if I can.
 
     // Actually, I can use the dnd-kit `delta.x` and the container width.
+    const [activeDragDate, setActiveDragDate] = useState<{ date: Date; percent: number } | null>(null);
+
+    const handleDragMove = (event: any) => {
+        const { active, delta } = event;
+        if (!active || !timelineRef) return;
+
+        const containerWidth = timelineRef.offsetWidth;
+        // We need the initial position of the item to calculate absolute position
+        // This is hard with just delta. 
+        // Strategy: Use the known storage of milestone positions!
+
+        const activeIdStr = String(active.id);
+        let label = activeIdStr;
+        if (activeIdStr.startsWith('body-')) label = activeIdStr.replace('body-', '');
+        else if (activeIdStr.startsWith('left-')) label = activeIdStr.replace('left-', '');
+        else if (activeIdStr.startsWith('right-')) label = activeIdStr.replace('right-', '');
+
+        const milestonePos = milestonePositions.find(p => p.milestone.label === label);
+        if (!milestonePos) return;
+
+        // Calculate current percent
+        let basePercent = 0;
+        if (activeIdStr.startsWith('right-')) {
+            if (milestonePos.endPercent) basePercent = milestonePos.endPercent;
+            else basePercent = milestonePos.startPercent; // Fallback?
+        } else {
+            basePercent = milestonePos.startPercent;
+        }
+
+        const deltaPercent = (delta.x / containerWidth) * 100;
+        const currentPercent = basePercent + deltaPercent;
+
+        // Convert percent to date
+        const totalMs = timelineConfig.endDate.getTime() - timelineConfig.startDate.getTime();
+        const time = timelineConfig.startDate.getTime() + (currentPercent / 100) * totalMs;
+        const date = new Date(time);
+
+        setActiveDragDate({ date, percent: currentPercent });
+    };
+
     const handleDragEndReal = async (event: DragEndEvent) => {
+        setActiveDragDate(null);
+        // ... rest of existing handleDragEndReal logic
         const { active, delta } = event;
         setActiveId(null);
 
@@ -348,6 +402,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
 
     const handleDragCancel = () => {
         setActiveId(null);
+        setActiveDragDate(null);
     };
 
     const handleMilestoneCreated = (newMilestone: Milestone) => {
@@ -398,6 +453,14 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
         setEditingMilestone(null);
     };
 
+    // Calculate dynamic minimum width based on duration
+    const containerMinWidth = useMemo(() => {
+        const totalMs = timelineConfig.endDate.getTime() - timelineConfig.startDate.getTime();
+        const totalDays = totalMs / (1000 * 60 * 60 * 24);
+        const minPixelsPerDay = 3; // Adjust density here
+        return Math.max(800, totalDays * minPixelsPerDay); // Minimum 800px or calculated width
+    }, [timelineConfig]);
+
     if (!mounted) return null;
 
     return (
@@ -405,8 +468,8 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Project Roadmap</h3>
-                    <p className="text-sm text-gray-500">Visualize your project timeline, milestones, and deliverables</p>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('project_detail.roadmap.title')}</h3>
+                    <p className="text-sm text-gray-500">{t('project_detail.roadmap.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -423,7 +486,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
                         className="flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors font-medium"
                     >
                         <Plus className="w-4 h-4" />
-                        Add Milestone
+                        {t('project_detail.roadmap.add_milestone')}
                     </button>
                 </div>
             </div>
@@ -432,13 +495,13 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             {showSettings && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-6 animate-in slide-in-from-top-2">
                     <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Range Mode:</label>
+                        <label className="text-sm font-medium text-gray-700">{t('project_detail.roadmap.settings.range_mode')}</label>
                         <button
                             onClick={() => setIsAutoFit(!isAutoFit)}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isAutoFit ? 'bg-blue-100 text-blue-700' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                         >
                             <RotateCcw className="w-3.5 h-3.5" />
-                            {isAutoFit ? "Auto-Fit Content" : "Manual Range"}
+                            {isAutoFit ? t('project_detail.roadmap.settings.auto_fit') : t('project_detail.roadmap.settings.manual')}
                         </button>
                     </div>
 
@@ -447,7 +510,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
                             <div className="w-px h-6 bg-gray-300" />
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
-                                    <label className="text-sm text-gray-600">Start:</label>
+                                    <label className="text-sm text-gray-600">{t('project_detail.roadmap.settings.start')}</label>
                                     <input
                                         type="date"
                                         value={manualStartDate}
@@ -456,7 +519,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
                                     />
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <label className="text-sm text-gray-600">End:</label>
+                                    <label className="text-sm text-gray-600">{t('project_detail.roadmap.settings.end')}</label>
                                     <input
                                         type="date"
                                         value={manualEndDate}
@@ -474,70 +537,86 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             <DndContext
                 sensors={sensors}
                 onDragStart={({ active }) => handleDragStart(active.id as string)}
+                onDragMove={handleDragMove}
                 onDragEnd={handleDragEndReal}
                 onDragCancel={handleDragCancel}
             >
-                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
-                    {/* Header Axis */}
-                    <div className="relative h-12 bg-gray-50 border-b border-gray-200" ref={setTimelineRef}>
-                        {/* Quarter markers (Top Axis) */}
-                        {quarterMarkers.map((marker, idx) => (
-                            <div
-                                key={idx}
-                                style={{ left: `${marker.position}%` }}
-                                className="absolute top-0 bottom-0 border-l border-gray-300 pl-1"
-                            >
-                                <span className="text-xs font-semibold text-gray-500 block mt-1">{marker.label}</span>
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col relative z-0 overflow-hidden">
+                    <div className="overflow-x-auto custom-scrollbar">
+                        <div style={{ minWidth: `${containerMinWidth}px` }} className="flex flex-col">
+                            {/* Header Axis */}
+                            <div className="relative h-12 bg-gray-50 border-b border-gray-200 rounded-t-lg" ref={setTimelineRef}>
+                                {/* Quarter markers (Top Axis) */}
+                                {quarterMarkers.map((marker, idx) => (
+                                    <div
+                                        key={idx}
+                                        style={{ left: `${marker.position}%` }}
+                                        className="absolute top-0 bottom-0 border-l border-gray-300 pl-1"
+                                    >
+                                        <span className="text-xs font-semibold text-gray-500 block mt-1">{marker.label}</span>
+                                    </div>
+                                ))}
+
+                                {/* Date Indicator (Active Drag) */}
+                                {activeDragDate && (
+                                    <div
+                                        className="absolute top-0 bottom-0 border-l-2 border-red-600 z-30 flex flex-col items-center pointer-events-none"
+                                        style={{ left: `${activeDragDate.percent}%` }}
+                                    >
+                                        <div className="bg-red-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm mt-0.5 whitespace-nowrap">
+                                            {formatDate(activeDragDate.date.toISOString())}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        ))}
-                    </div>
 
-                    {/* Gantt Body */}
-                    <div className="relative min-h-[300px]">
-                        {/* Background Grid Lines */}
-                        <div className="absolute inset-0 pointer-events-none">
-                            {quarterMarkers.map((marker, idx) => (
-                                <div
-                                    key={idx}
-                                    style={{ left: `${marker.position}%` }}
-                                    className="absolute top-0 bottom-0 border-l border-dashed border-gray-200"
-                                />
-                            ))}
-                        </div>
-
-                        {/* Rows */}
-                        <div className="divide-y divide-gray-100 relative">
-                            {milestonePositions.map((pos) => (
-                                <div key={pos.milestone.label} className="h-16 relative">
-                                    {/* Row background hover effect */}
-                                    <div className="absolute inset-0 hover:bg-gray-50 transition-colors pointer-events-none" />
-
-                                    {/* The Milestone Bar */}
-                                    <DraggableMilestoneWrapper
-                                        milestone={pos.milestone}
-                                        startPercent={pos.startPercent}
-                                        endPercent={pos.endPercent}
-                                        widthPercent={pos.widthPercent}
-                                        onDelete={onRequestDelete}
-                                        onEditStart={handleEditStart}
-                                        isInRow={true}
-                                    />
+                            {/* Gantt Body */}
+                            <div className="relative min-h-[300px]">
+                                {/* Background Grid Lines */}
+                                <div className="absolute inset-0 pointer-events-none">
+                                    {quarterMarkers.map((marker, idx) => (
+                                        <div
+                                            key={idx}
+                                            style={{ left: `${marker.position}%` }}
+                                            className="absolute top-0 bottom-0 border-l border-dashed border-gray-200"
+                                        />
+                                    ))}
                                 </div>
-                            ))}
 
-                            {/* Empty State placeholder */}
-                            {milestones.length === 0 && (
-                                <div className="h-32 flex items-center justify-center text-gray-400">
-                                    No milestones yet. Click "Add Milestone" to start planning.
+                                {/* Rows */}
+                                <div className="divide-y divide-gray-100 relative">
+                                    {milestonePositions.map((pos) => (
+                                        <div key={pos.milestone.label} className="h-16 relative">
+                                            {/* Row background hover effect */}
+                                            <div className="absolute inset-0 hover:bg-gray-50 transition-colors pointer-events-none" />
+
+                                            {/* The Milestone Bar */}
+                                            <DraggableMilestoneWrapper
+                                                milestone={pos.milestone}
+                                                startPercent={pos.startPercent}
+                                                endPercent={pos.endPercent}
+                                                widthPercent={pos.widthPercent}
+                                                onDelete={onRequestDelete}
+                                                onEditStart={handleEditStart}
+                                                isInRow={true}
+                                            />
+                                        </div>
+                                    ))}
+
+                                    {/* Empty State placeholder */}
+                                    {milestones.length === 0 && (
+                                        <div className="h-32 flex items-center justify-center text-gray-400">
+                                            {t('project_detail.roadmap.empty_state')}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
+                            {/* Footer Labels - Inside Scroll Container so they align with content */}
+                            <div className="bg-gray-50 border-t border-gray-200 p-2 flex justify-between text-xs text-gray-400 font-medium rounded-b-lg">
+                                <span>{formatMonthYear(timelineConfig.startDate)}</span>
+                                <span>{formatMonthYear(timelineConfig.endDate)}</span>
+                            </div>
                         </div>
-                    </div>
-
-                    {/* Footer Labels */}
-                    <div className="bg-gray-50 border-t border-gray-200 p-2 flex justify-between text-xs text-gray-400 font-medium">
-                        <span>{formatMonthYear(timelineConfig.startDate)}</span>
-                        <span>{formatMonthYear(timelineConfig.endDate)}</span>
                     </div>
                 </div>
             </DndContext>
@@ -556,22 +635,22 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             {milestoneToDelete && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Milestone</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">{t('project_detail.roadmap.delete_modal.title')}</h3>
                         <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete milestone "{milestoneToDelete}"? This action cannot be undone.
+                            {t('project_detail.roadmap.delete_modal.description')} "{milestoneToDelete}"? {t('common.cannot_undone')}
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setMilestoneToDelete(null)}
                                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                             <button
                                 onClick={confirmDelete}
                                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
                             >
-                                Delete
+                                {t('common.delete')}
                             </button>
                         </div>
                     </div>
@@ -599,6 +678,7 @@ function DraggableMilestoneWrapper({
     onEditStart: (milestone: Milestone) => void; // New prop signature
     isInRow?: boolean;
 }) {
+    const { t } = useTranslation();
     // We maintain 3 draggables: Body, Left Handle, Right Handle
     const bodyDrag = useDraggable({ id: `body-${milestone.label}`, data: { type: 'body', label: milestone.label } });
     const leftDrag = useDraggable({ id: `left-${milestone.label}`, data: { type: 'left', label: milestone.label } });
@@ -617,7 +697,7 @@ function DraggableMilestoneWrapper({
     const heightStyle = isInRow ? 'h-10' : 'h-16';
 
     const ActionButtons = () => (
-        <div className="absolute -top-3 -right-2 opacity-0 group-hover:opacity-100 flex items-center gap-1 z-50 pointer-events-auto transition-opacity"
+        <div className="absolute top-1/2 -translate-y-1/2 -right-9 opacity-0 group-hover:opacity-100 flex flex-col gap-1 z-50 pointer-events-auto transition-opacity"
             onPointerDown={(e) => e.stopPropagation()}
         >
             <button
@@ -625,20 +705,20 @@ function DraggableMilestoneWrapper({
                     e.stopPropagation();
                     onEditStart(milestone);
                 }}
-                className="bg-white border border-gray-200 rounded-full p-2 shadow-sm hover:bg-blue-50 text-blue-600 transition-colors"
-                title="Edit Milestone"
+                className="bg-white border border-gray-200 rounded-full p-1.5 shadow-sm hover:bg-blue-50 text-blue-600 transition-colors"
+                title={t('project_detail.roadmap.tooltip.edit')}
             >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-3.5 h-3.5" />
             </button>
             <button
                 onClick={(e) => {
                     e.stopPropagation();
                     onDelete(milestone.label);
                 }}
-                className="bg-white border border-gray-200 rounded-full p-2 shadow-sm hover:bg-red-50 text-red-600 transition-colors"
-                title="Delete Milestone"
+                className="bg-white border border-gray-200 rounded-full p-1.5 shadow-sm hover:bg-red-50 text-red-600 transition-colors"
+                title={t('project_detail.roadmap.tooltip.delete')}
             >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5" />
             </button>
         </div>
     );
@@ -647,21 +727,30 @@ function DraggableMilestoneWrapper({
         <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[60] shadow-lg">
             <div className="font-semibold mb-0.5">{milestone.label}</div>
             <div className="grid grid-cols-[auto,1fr] gap-x-2 text-gray-300">
-                <span className="text-gray-400">Start:</span>
+                <span className="text-gray-400">{t('project_detail.roadmap.tooltip.start')}</span>
                 <span>{formatDate(milestone.date)}</span>
                 {milestone.end_date && (
                     <>
-                        <span className="text-gray-400">End:</span>
+                        <span className="text-gray-400">{t('project_detail.roadmap.tooltip.end')}</span>
                         <span>{formatDate(milestone.end_date)}</span>
                     </>
                 )}
-                <span className="text-gray-400">Progress:</span>
+                <span className="text-gray-400">{t('project_detail.roadmap.tooltip.progress')}</span>
                 <span>{milestone.progress}%</span>
             </div>
             {/* Arrow */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
         </div>
     );
+
+    const isCompleted = milestone.progress === 100;
+    const barBaseClass = isCompleted ? 'bg-emerald-100 border-emerald-300' : 'bg-blue-100 border-blue-300';
+    const barHoverClass = isCompleted ? 'hover:bg-emerald-50' : 'hover:bg-blue-50';
+    const barDragClass = isCompleted ? 'ring-emerald-400' : 'ring-blue-400';
+    const fillClass = isCompleted ? 'bg-emerald-500/20' : 'bg-blue-500/20';
+    const textClass = isCompleted ? 'text-emerald-900' : 'text-blue-900';
+    const progressTextClass = isCompleted ? 'text-emerald-600' : 'text-blue-600';
+    const handleClass = isCompleted ? 'bg-emerald-400' : 'bg-blue-400';
 
     if (isRange) {
         // --- GANTT BAR RENDER ---
@@ -683,19 +772,19 @@ function DraggableMilestoneWrapper({
                         e.stopPropagation();
                         onEditStart(milestone);
                     }}
-                    className={`absolute inset-0 bg-blue-100 border border-blue-300 rounded-md cursor-grab active:cursor-grabbing hover:bg-blue-50 transition-colors shadow-sm ${bodyDrag.isDragging ? 'opacity-50 ring-2 ring-blue-400' : ''}`}
+                    className={`absolute inset-0 ${barBaseClass} border rounded-md cursor-grab active:cursor-grabbing ${barHoverClass} transition-colors shadow-sm ${bodyDrag.isDragging ? `opacity-50 ring-2 ${barDragClass}` : ''}`}
                     style={bodyDrag.transform ? { transform: `translate3d(${bodyDrag.transform.x}px, 0, 0)` } : {}}
                 >
                     {/* Progress Fill */}
                     <div
-                        className="h-full bg-blue-500/20 rounded-l-md pointer-events-none transition-all duration-300"
+                        className={`h-full ${fillClass} rounded-l-md pointer-events-none transition-all duration-300`}
                         style={{ width: `${milestone.progress}%` }}
                     />
 
                     {/* Content */}
                     <div className="absolute inset-0 flex items-center justify-between px-2 overflow-hidden pointer-events-none">
-                        <span className="text-xs font-semibold text-blue-900 truncate flex-1">{milestone.label}</span>
-                        <span className="text-[10px] text-blue-600 font-mono ml-2 opacity-70">{milestone.progress}%</span>
+                        <span className={`text-xs font-semibold ${textClass} truncate flex-1`}>{milestone.label}</span>
+                        <span className={`text-[10px] ${progressTextClass} font-mono ml-2 opacity-70`}>{milestone.progress}%</span>
                     </div>
 
                     <ActionButtons />
@@ -710,7 +799,7 @@ function DraggableMilestoneWrapper({
                     className="absolute top-0 bottom-0 -left-2 w-4 cursor-ew-resize flex items-center justify-center opacity-0 group-hover:opacity-100 z-20"
                     style={leftDrag.transform ? { transform: `translate3d(${leftDrag.transform.x}px, 0, 0)` } : {}}
                 >
-                    <div className="w-1.5 h-6 bg-blue-400 rounded-full shadow-sm hover:scale-110 transition-transform" />
+                    <div className={`w-1.5 h-6 ${handleClass} rounded-full shadow-sm hover:scale-110 transition-transform`} />
                 </div>
 
                 {/* Right Resize Handle */}
@@ -721,7 +810,7 @@ function DraggableMilestoneWrapper({
                     className="absolute top-0 bottom-0 -right-2 w-4 cursor-ew-resize flex items-center justify-center opacity-0 group-hover:opacity-100 z-20"
                     style={rightDrag.transform ? { transform: `translate3d(${rightDrag.transform.x}px, 0, 0)` } : {}}
                 >
-                    <div className="w-1.5 h-6 bg-blue-400 rounded-full shadow-sm hover:scale-110 transition-transform" />
+                    <div className={`w-1.5 h-6 ${handleClass} rounded-full shadow-sm hover:scale-110 transition-transform`} />
                 </div>
             </div>
         );

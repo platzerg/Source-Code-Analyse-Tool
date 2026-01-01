@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { Save, Layout } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 export default function GlobalSettingsPage() {
+    const { t } = useTranslation();
     // Menu Visibility State
     const [projectTabs, setProjectTabs] = useState({
         repositories: true,
@@ -87,7 +89,7 @@ export default function GlobalSettingsPage() {
                 // Show success message
                 const button = document.activeElement as HTMLButtonElement;
                 const originalText = button.innerHTML;
-                button.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Saved!';
+                button.innerHTML = `<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>${t('settings_page.saved')}`;
                 button.disabled = true;
                 setTimeout(() => {
                     button.innerHTML = originalText;
@@ -96,7 +98,7 @@ export default function GlobalSettingsPage() {
             }
         } catch (error) {
             console.error("Error saving settings:", error);
-            alert("Failed to save settings. Please try again.");
+            alert(t('settings_page.error_save'));
         }
     };
 
@@ -104,8 +106,8 @@ export default function GlobalSettingsPage() {
         <div className="max-w-5xl mx-auto py-8 px-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-                <p className="text-gray-500 mt-1">Manage your application preferences and menu visibility.</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('settings_page.title')}</h1>
+                <p className="text-gray-500 mt-1">{t('settings_page.description')}</p>
             </div>
 
             <div className="space-y-8">
@@ -114,10 +116,10 @@ export default function GlobalSettingsPage() {
                     <CardHeader className="bg-gray-50 rounded-t-lg border-b border-gray-100">
                         <CardTitle className="text-gray-900 flex items-center gap-2">
                             <Layout className="w-5 h-5 text-gray-500" />
-                            Menu Visibility
+                            {t('settings_page.menu_visibility.title')}
                         </CardTitle>
                         <CardDescription>
-                            Configure which tabs are visible in the Project and Repository views across the application.
+                            {t('settings_page.menu_visibility.description')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6 pt-6">
@@ -125,15 +127,15 @@ export default function GlobalSettingsPage() {
                             {/* Project Tabs */}
                             <div>
                                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                    <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-sm">Project Pages</span>
+                                    <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-sm">{t('settings_page.menu_visibility.project_pages')}</span>
                                 </h4>
                                 <div className="space-y-2">
                                     {[
-                                        { id: 'repositories', label: 'Repositories' },
-                                        { id: 'backlog', label: 'Backlog' },
-                                        { id: 'board', label: 'Board' },
-                                        { id: 'roadmap', label: 'Roadmap' },
-                                        { id: 'insights', label: 'Insights' },
+                                        { id: 'repositories', label: t('project_detail.tabs.repositories') },
+                                        { id: 'backlog', label: t('project_detail.tabs.backlog') },
+                                        { id: 'board', label: t('project_detail.tabs.board') },
+                                        { id: 'roadmap', label: t('project_detail.tabs.roadmap') },
+                                        { id: 'insights', label: t('project_detail.tabs.insights') },
                                     ].map((tab) => (
                                         <label key={tab.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors cursor-pointer">
                                             <input
@@ -151,22 +153,22 @@ export default function GlobalSettingsPage() {
                             {/* Repository Tabs */}
                             <div>
                                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                    <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-sm">Repository Pages</span>
+                                    <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-sm">{t('settings_page.menu_visibility.repo_pages')}</span>
                                 </h4>
                                 <div className="space-y-2">
                                     {[
-                                        { id: 'overview', label: 'Overview' },
-                                        { id: 'technologies', label: 'Technologies' },
-                                        { id: 'code-flows', label: 'Code Flows' },
-                                        { id: 'code-quality', label: 'Code Quality' },
-                                        { id: 'team-staffing', label: 'Team Staffing' },
-                                        { id: 'feature-map', label: 'Feature Map' },
-                                        { id: 'dependencies', label: 'Dependencies' },
-                                        { id: 'security', label: 'Security' },
-                                        { id: 'ai-features', label: 'AI Features' },
-                                        { id: 'ask-questions', label: 'Ask Questions' },
-                                        { id: 'prompt-generation', label: 'Prompt Generation' },
-                                        { id: 'pull-requests', label: 'Pull Requests' },
+                                        { id: 'overview', label: t('settings_page.menu_visibility.tabs.overview') },
+                                        { id: 'technologies', label: t('settings_page.menu_visibility.tabs.technologies') },
+                                        { id: 'code-flows', label: t('settings_page.menu_visibility.tabs.code_flows') },
+                                        { id: 'code-quality', label: t('settings_page.menu_visibility.tabs.code_quality') },
+                                        { id: 'team-staffing', label: t('settings_page.menu_visibility.tabs.team_staffing') },
+                                        { id: 'feature-map', label: t('settings_page.menu_visibility.tabs.feature_map') },
+                                        { id: 'dependencies', label: t('settings_page.menu_visibility.tabs.dependencies') },
+                                        { id: 'security', label: t('settings_page.menu_visibility.tabs.security') },
+                                        { id: 'ai-features', label: t('settings_page.menu_visibility.tabs.ai_features') },
+                                        { id: 'ask-questions', label: t('settings_page.menu_visibility.tabs.ask_questions') },
+                                        { id: 'prompt-generation', label: t('settings_page.menu_visibility.tabs.prompt_generation') },
+                                        { id: 'pull-requests', label: t('settings_page.menu_visibility.tabs.pull_requests') },
                                     ].map((tab) => (
                                         <label key={tab.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors cursor-pointer">
                                             <input
@@ -187,7 +189,7 @@ export default function GlobalSettingsPage() {
                                 className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-black transition-colors text-sm font-medium"
                             >
                                 <Save className="w-4 h-4" />
-                                Save Settings
+                                {t('settings_page.save_settings')}
                             </button>
                         </div>
                     </CardContent>

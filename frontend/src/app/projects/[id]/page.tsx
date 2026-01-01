@@ -55,6 +55,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import ManageRepositoriesDialog from "@/components/ManageRepositoriesDialog";
 import DragDropBoard from "@/components/DragDropBoard";
 import DragDropRoadmap from "@/components/DragDropRoadmap";
+import { useTranslation } from "react-i18next";
 
 interface Repository {
     id: string;
@@ -104,6 +105,7 @@ const INITIAL_TASKS: Task[] = [
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
+    const { t } = useTranslation();
     const [project, setProject] = useState<Project | null>(null);
     const [repositories, setRepositories] = useState<Repository[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -236,8 +238,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     if (!project) {
         return (
             <div className="p-8 text-center bg-white h-screen">
-                <h1 className="text-2xl font-bold text-gray-900">Project not found</h1>
-                <Link href="/projects" className="text-red-800 hover:underline mt-4 inline-block">Back to Projects</Link>
+                <h1 className="text-2xl font-bold text-gray-900">{t('project_detail.not_found.title')}</h1>
+                <Link href="/projects" className="text-red-800 hover:underline mt-4 inline-block">{t('project_detail.not_found.back_link')}</Link>
             </div>
         );
     }
@@ -250,7 +252,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4 px-1">
                     <Link href="/projects" className="flex items-center hover:text-blue-600 transition-colors">
                         <ChevronLeft className="w-4 h-4 mr-1" />
-                        Back to Projects
+                        {t('project_detail.back_to_projects')}
                     </Link>
                 </div>
 
@@ -279,11 +281,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 {/* TABS */}
                 <div className="flex items-center space-x-1 mt-2 -mb-[1px]">
                     {[
-                        { id: 'repositories', label: 'Repositories', icon: Folder },
-                        { id: 'backlog', label: 'Backlog', icon: Table },
-                        { id: 'board', label: 'Board', icon: Kanban },
-                        { id: 'roadmap', label: 'Roadmap', icon: Map },
-                        { id: 'insights', label: 'Insights', icon: PieChartIcon },
+                        { id: 'repositories', label: t('project_detail.tabs.repositories'), icon: Folder },
+                        { id: 'backlog', label: t('project_detail.tabs.backlog'), icon: Table },
+                        { id: 'board', label: t('project_detail.tabs.board'), icon: Kanban },
+                        { id: 'roadmap', label: t('project_detail.tabs.roadmap'), icon: Map },
+                        { id: 'insights', label: t('project_detail.tabs.insights'), icon: PieChartIcon },
                     ].filter(tab => visibleTabs[tab.id] !== false).map((tab) => (
                         <button
                             key={tab.id}
@@ -364,13 +366,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
                             {/* Manage Repositories Button */}
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">Repositories</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">{t('project_detail.tabs.repositories')}</h3>
                                 <button
                                     onClick={() => setIsManageReposOpen(true)}
                                     className="flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors text-sm font-medium"
                                 >
                                     <Plus className="w-4 h-4" />
-                                    Manage Repositories
+                                    {t('project_detail.repositories.manage_button')}
                                 </button>
                             </div>
 
@@ -441,17 +443,17 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         )}
                                     </div>
                                     <button className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                                        <Filter className="w-4 h-4" /> Filter
+                                        <Filter className="w-4 h-4" /> {t('project_detail.backlog.filter')}
                                     </button>
                                     <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                        {filteredTasks.length} items
+                                        {t('project_detail.backlog.items_count', { count: filteredTasks.length })}
                                     </span>
                                 </div>
                                 <button
                                     onClick={handleAddTask}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm ml-4"
                                 >
-                                    <Plus className="w-4 h-4" /> Add item
+                                    <Plus className="w-4 h-4" /> {t('project_detail.backlog.add_item')}
                                 </button>
                             </div>
                             <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
@@ -459,10 +461,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                     <thead className="bg-[#f6f8fa] border-b border-gray-200 text-gray-500">
                                         <tr>
                                             <th className="px-6 py-3 font-medium w-12"></th>
-                                            <th className="px-6 py-3 font-medium">Title</th>
-                                            <th className="px-6 py-3 font-medium">Status</th>
-                                            <th className="px-6 py-3 font-medium">Assignee</th>
-                                            <th className="px-6 py-3 font-medium text-right pr-12">Priority</th>
+                                            <th className="px-6 py-3 font-medium">{t('project_detail.backlog.table.title')}</th>
+                                            <th className="px-6 py-3 font-medium">{t('project_detail.backlog.table.status')}</th>
+                                            <th className="px-6 py-3 font-medium">{t('project_detail.backlog.table.assignee')}</th>
+                                            <th className="px-6 py-3 font-medium text-right pr-12">{t('project_detail.backlog.table.priority')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -539,7 +541,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                             {projectInsights.length === 0 && (
                                 <div className="text-center py-12">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                                    <p className="text-sm text-muted-foreground">Loading Project Insights...</p>
+                                    <p className="text-sm text-muted-foreground">{t('project_detail.insights.loading')}</p>
                                 </div>
                             )}
 
@@ -555,7 +557,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                 <Card className="border-none shadow-sm ring-1 ring-gray-100">
                                                     <CardContent className="p-4">
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tech Debt Ratio</p>
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('project_detail.insights.cards.tech_debt_ratio')}</p>
                                                             <AlertTriangle className="w-4 h-4 text-amber-500" />
                                                         </div>
                                                         <div className="flex items-baseline gap-2">
@@ -564,13 +566,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                                 <ArrowUpRight className="w-3 h-3 mr-0.5" /> +2.4%
                                                             </span>
                                                         </div>
-                                                        <p className="text-xs text-gray-400 mt-1">Refactoring needed</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{t('project_detail.insights.cards.refactoring_needed')}</p>
                                                     </CardContent>
                                                 </Card>
                                                 <Card className="border-none shadow-sm ring-1 ring-gray-100">
                                                     <CardContent className="p-4">
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Deployment freq.</p>
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('project_detail.insights.cards.deployment_freq')}</p>
                                                             <Zap className="w-4 h-4 text-blue-500" />
                                                         </div>
                                                         <div className="flex items-baseline gap-2">
@@ -585,7 +587,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                 <Card className="border-none shadow-sm ring-1 ring-gray-100">
                                                     <CardContent className="p-4">
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Active Contributors</p>
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('project_detail.insights.cards.active_contributors')}</p>
                                                             <Users className="w-4 h-4 text-purple-500" />
                                                         </div>
                                                         <div className="flex items-baseline gap-2">
@@ -594,22 +596,22 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                                 <TrendingUp className="w-3 h-3 mr-0.5" /> +2
                                                             </span>
                                                         </div>
-                                                        <p className="text-xs text-gray-400 mt-1">This week</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{t('project_detail.insights.cards.this_week')}</p>
                                                     </CardContent>
                                                 </Card>
                                                 <Card className="border-none shadow-sm ring-1 ring-gray-100">
                                                     <CardContent className="p-4">
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Refactor Est.</p>
+                                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('project_detail.insights.cards.refactor_est')}</p>
                                                             <Clock className="w-4 h-4 text-gray-500" />
                                                         </div>
                                                         <div className="flex items-baseline gap-2">
                                                             <h3 className="text-2xl font-bold text-gray-900">{debt.total_debt_hours ? `${debt.total_debt_hours}h` : 'N/A'}</h3>
                                                             <span className="text-xs text-gray-500 font-medium">
-                                                                Sprint buffer
+                                                                {t('project_detail.insights.cards.sprint_buffer')}
                                                             </span>
                                                         </div>
-                                                        <p className="text-xs text-gray-400 mt-1">To clear high debt</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{t('project_detail.insights.cards.clear_debt')}</p>
                                                     </CardContent>
                                                 </Card>
                                             </div>
@@ -632,9 +634,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                             <div>
                                                                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                                                     <Users className="w-5 h-5 text-blue-600" />
-                                                                    Contributor Analysis
+                                                                    {t('project_detail.insights.charts.contributor_analysis')}
                                                                 </h3>
-                                                                <p className="text-xs text-gray-500 mt-1">Commits distribution over the last 30 days</p>
+                                                                <p className="text-xs text-gray-500 mt-1">{t('project_detail.insights.charts.commits_dist')}</p>
                                                             </div>
                                                         </div>
                                                         <div className="h-64">
@@ -671,9 +673,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                             <div>
                                                                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                                                     <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                                                    Code Churn (Hotspots)
+                                                                    {t('project_detail.insights.charts.code_churn')}
                                                                 </h3>
-                                                                <p className="text-xs text-gray-500 mt-1">Files with highest modification frequency impacting risk</p>
+                                                                <p className="text-xs text-gray-500 mt-1">{t('project_detail.insights.charts.churn_desc')}</p>
                                                             </div>
                                                         </div>
                                                         <div className="space-y-3">
@@ -686,7 +688,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                                         </div>
                                                                     </div>
                                                                     <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
-                                                                        High Risk
+                                                                        {t('project_detail.insights.charts.high_risk')}
                                                                     </span>
                                                                 </div>
                                                             ))}
@@ -707,15 +709,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                         <div className="mb-6">
                                                             <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                                                 <FileText className="w-5 h-5 text-gray-600" />
-                                                                Technical Debt
+                                                                {t('project_detail.insights.debt.title')}
                                                             </h3>
-                                                            <p className="text-xs text-gray-500 mt-1">Estimated effort to resolve debt</p>
+                                                            <p className="text-xs text-gray-500 mt-1">{t('project_detail.insights.debt.subtitle')}</p>
                                                         </div>
 
                                                         <div className="space-y-6">
                                                             <div className="relative pt-2">
                                                                 <div className="flex justify-between items-end mb-2">
-                                                                    <span className="text-sm font-medium text-gray-700">Code Smell Ratio</span>
+                                                                    <span className="text-sm font-medium text-gray-700">{t('project_detail.insights.debt.code_smell_ratio')}</span>
                                                                     <span className="text-sm font-bold text-red-600">{debt.debt_ratio || '0%'}</span>
                                                                 </div>
                                                                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -725,23 +727,23 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
                                                             <div className="grid grid-cols-2 gap-4">
                                                                 <div className="p-3 bg-red-50 rounded-lg text-center">
-                                                                    <p className="text-xs text-red-600 font-bold uppercase mb-1">Critical</p>
+                                                                    <p className="text-xs text-red-600 font-bold uppercase mb-1">{t('project_detail.insights.debt.critical')}</p>
                                                                     <p className="text-xl font-bold text-gray-900">{debt.total_debt_hours ? Math.round(debt.total_debt_hours * 0.2) + 'h' : '0h'}</p>
                                                                 </div>
                                                                 <div className="p-3 bg-orange-50 rounded-lg text-center">
-                                                                    <p className="text-xs text-orange-600 font-bold uppercase mb-1">Major</p>
+                                                                    <p className="text-xs text-orange-600 font-bold uppercase mb-1">{t('project_detail.insights.debt.major')}</p>
                                                                     <p className="text-xl font-bold text-gray-900">{debt.total_debt_hours ? Math.round(debt.total_debt_hours * 0.4) + 'h' : '0h'}</p>
                                                                 </div>
                                                             </div>
 
                                                             <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                                                                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">Top Debt Aread</h4>
+                                                                <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase">{t('project_detail.insights.debt.top_areas')}</h4>
                                                                 <div className="space-y-1">
                                                                     {debt.top_offenders?.map((offender: string, i: number) => (
                                                                         <p key={i} className="text-sm font-medium text-gray-900">{offender}</p>
                                                                     ))}
                                                                 </div>
-                                                                <p className="text-xs text-gray-500 mt-1">Complex logic without recent tests.</p>
+                                                                <p className="text-xs text-gray-500 mt-1">{t('project_detail.insights.debt.complex_logic')}</p>
                                                             </div>
                                                         </div>
                                                     </CardContent>
@@ -759,12 +761,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                             <div>
                                                                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                                                                     <History className="w-5 h-5 text-emerald-600" />
-                                                                    Project Changelog
+                                                                    {t('project_detail.insights.changelog.title')}
                                                                 </h3>
-                                                                <p className="text-xs text-gray-500 mt-1">Automated release notes from recent activity</p>
+                                                                <p className="text-xs text-gray-500 mt-1">{t('project_detail.insights.changelog.subtitle')}</p>
                                                             </div>
                                                             <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-black transition-colors">
-                                                                <Zap className="w-3 h-3" /> Generate {changelog?.next_version || 'v1.0.0'}
+                                                                <Zap className="w-3 h-3" /> {t('project_detail.insights.changelog.generate')} {changelog?.next_version || 'v1.0.0'}
                                                             </button>
                                                         </div>
 
@@ -782,7 +784,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                                                         </ul>
                                                                     </div>
                                                                 ) : (
-                                                                    <p className="text-gray-400 italic">No changelog data available.</p>
+                                                                    <p className="text-gray-400 italic">{t('project_detail.insights.changelog.no_data')}</p>
                                                                 )}
                                                             </div>
                                                         </div>

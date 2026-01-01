@@ -4,6 +4,8 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/sidebar";
 
+import I18nProvider from "./i18n-provider"; // Import new provider
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -19,14 +21,16 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={cn(inter.className, "bg-gray-50 text-slate-900 antialiased")}>
-                <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar />
+                <I18nProvider>
+                    <div className="flex min-h-screen bg-gray-50">
+                        <Sidebar />
 
-                    {/* Main Content */}
-                    <main className="pl-0 md:pl-64 w-full min-h-screen">
-                        {children}
-                    </main>
-                </div>
+                        {/* Main Content */}
+                        <main className="pl-0 md:pl-64 w-full min-h-screen">
+                            {children}
+                        </main>
+                    </div>
+                </I18nProvider>
             </body>
         </html>
     );

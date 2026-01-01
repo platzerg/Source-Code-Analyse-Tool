@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CreateTaskDialogProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ export default function CreateTaskDialog({
     projectId,
     onTaskCreated
 }: CreateTaskDialogProps) {
+    const { t } = useTranslation();
     const [title, setTitle] = useState("");
     const [assignee, setAssignee] = useState("");
     const [priority, setPriority] = useState("Medium");
@@ -25,7 +27,7 @@ export default function CreateTaskDialog({
 
     const handleCreate = async () => {
         if (!title.trim()) {
-            alert("Please enter a task title");
+            alert(t('project_detail.board.create_dialog.validation.title_required'));
             return;
         }
 
@@ -62,11 +64,11 @@ export default function CreateTaskDialog({
                 setStatus("Todo");
                 onClose();
             } else {
-                alert("Failed to create task. Please try again.");
+                alert(t('project_detail.board.create_dialog.validation.error_create'));
             }
         } catch (error) {
             console.error("Error creating task:", error);
-            alert("Failed to create task. Please try again.");
+            alert(t('project_detail.board.create_dialog.validation.error_create'));
         } finally {
             setIsCreating(false);
         }
@@ -79,7 +81,7 @@ export default function CreateTaskDialog({
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900">Create New Task</h2>
+                    <h2 className="text-xl font-bold text-gray-900">{t('project_detail.board.create_dialog.title')}</h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -93,13 +95,13 @@ export default function CreateTaskDialog({
                     {/* Title */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Task Title *
+                            {t('project_detail.board.create_dialog.labels.title')}
                         </label>
                         <input
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Enter task title..."
+                            placeholder={t('project_detail.board.create_dialog.placeholders.title')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
                             autoFocus
                         />
@@ -108,13 +110,13 @@ export default function CreateTaskDialog({
                     {/* Assignee */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Assignee
+                            {t('project_detail.board.create_dialog.labels.assignee')}
                         </label>
                         <input
                             type="text"
                             value={assignee}
                             onChange={(e) => setAssignee(e.target.value)}
-                            placeholder="Enter assignee name..."
+                            placeholder={t('project_detail.board.create_dialog.placeholders.assignee')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
                         />
                     </div>
@@ -122,24 +124,24 @@ export default function CreateTaskDialog({
                     {/* Priority */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Priority
+                            {t('project_detail.board.create_dialog.labels.priority')}
                         </label>
                         <select
                             value={priority}
                             onChange={(e) => setPriority(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
                         >
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                            <option value="Critical">Critical</option>
+                            <option value="Low">{t('project_detail.board.priority.low')}</option>
+                            <option value="Medium">{t('project_detail.board.priority.medium')}</option>
+                            <option value="High">{t('project_detail.board.priority.high')}</option>
+                            <option value="Critical">{t('project_detail.board.priority.critical')}</option>
                         </select>
                     </div>
 
                     {/* Due Date */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Due Date
+                            {t('project_detail.board.create_dialog.labels.due_date')}
                         </label>
                         <input
                             type="date"
@@ -152,16 +154,16 @@ export default function CreateTaskDialog({
                     {/* Status */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Initial Status
+                            {t('project_detail.board.create_dialog.labels.initial_status')}
                         </label>
                         <select
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
                         >
-                            <option value="Todo">Todo</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Done">Done</option>
+                            <option value="Todo">{t('project_detail.board.columns.todo')}</option>
+                            <option value="In Progress">{t('project_detail.board.columns.in_progress')}</option>
+                            <option value="Done">{t('project_detail.board.columns.done')}</option>
                         </select>
                     </div>
                 </div>
@@ -172,7 +174,7 @@ export default function CreateTaskDialog({
                         onClick={onClose}
                         className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                     >
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button
                         onClick={handleCreate}
@@ -182,12 +184,12 @@ export default function CreateTaskDialog({
                         {isCreating ? (
                             <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                Creating...
+                                {t('project_detail.board.create_dialog.submitting')}
                             </>
                         ) : (
                             <>
                                 <Plus className="w-4 h-4" />
-                                Create Task
+                                {t('project_detail.board.create_dialog.submit')}
                             </>
                         )}
                     </button>

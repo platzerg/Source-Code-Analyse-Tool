@@ -5,9 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Folder, GitBranch, Settings, Home } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { t } = useTranslation();
 
     const isActive = (path: string) => pathname?.startsWith(path);
 
@@ -30,7 +32,7 @@ export function Sidebar() {
                     )}
                 >
                     <Home className="w-5 h-5" />
-                    <span>Overview</span>
+                    <span>{t('navigation.dashboard')}</span>
                 </Link>
 
                 {/* Projects */}
@@ -44,7 +46,7 @@ export function Sidebar() {
                     )}
                 >
                     <Folder className="w-5 h-5" />
-                    <span>Projects</span>
+                    <span>{t('navigation.projects')}</span>
                 </Link>
 
                 {/* Repositories */}
@@ -58,7 +60,7 @@ export function Sidebar() {
                     )}
                 >
                     <GitBranch className="w-5 h-5" />
-                    <span>Repositories</span>
+                    <span>{t('navigation.repositories')}</span>
                 </Link>
 
                 {/* Settings */}
@@ -72,7 +74,7 @@ export function Sidebar() {
                     )}
                 >
                     <Settings className="w-5 h-5" />
-                    <span>Settings</span>
+                    <span>{t('navigation.settings')}</span>
                 </Link>
             </nav>
         </aside>

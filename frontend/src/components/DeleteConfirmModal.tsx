@@ -2,6 +2,7 @@
 
 import { AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface DeleteConfirmModalProps {
     isOpen: boolean;
@@ -20,6 +21,8 @@ export default function DeleteConfirmModal({
     description,
     itemName
 }: DeleteConfirmModalProps) {
+    const { t } = useTranslation();
+
     if (!isOpen) return null;
 
     return (
@@ -42,7 +45,7 @@ export default function DeleteConfirmModal({
                     <p className="text-gray-500 text-sm mb-4">
                         {description}{" "}
                         <span className="font-bold text-gray-900">"{itemName}"</span>?
-                        This action cannot be undone.
+                        {t('common.cannot_undone')}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-3 mt-6">
@@ -50,7 +53,7 @@ export default function DeleteConfirmModal({
                             onClick={onClose}
                             className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                         <button
                             onClick={() => {
@@ -59,7 +62,7 @@ export default function DeleteConfirmModal({
                             }}
                             className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm"
                         >
-                            Delete
+                            {t('common.delete')}
                         </button>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LayoutTemplate, Activity, Briefcase, FolderOpen, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 interface Project {
     id: number;
@@ -40,6 +41,7 @@ interface OverviewData {
 }
 
 export default function Dashboard() {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState("overview");
     const [projects, setProjects] = useState<Project[]>([]);
     const [repositories, setRepositories] = useState<Repository[]>([]);
@@ -83,7 +85,7 @@ export default function Dashboard() {
         return (
             <div className="flex justify-center items-center h-screen text-gray-500">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-800 mr-2"></div>
-                Loading Dashboard...
+                {t('dashboard.loading')}
             </div>
         );
     }
@@ -93,8 +95,8 @@ export default function Dashboard() {
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
-                    <p className="text-gray-500 mt-1">System status and activity overview</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+                    <p className="text-gray-500 mt-1">{t('dashboard.subtitle')}</p>
                 </div>
             </div>
 
@@ -103,8 +105,8 @@ export default function Dashboard() {
                 {/* Interactive Tabs */}
                 <div className="flex space-x-8 border-b border-gray-200 mt-2 pb-0 text-sm font-medium text-gray-500 overflow-x-auto">
                     {[
-                        { id: "overview", label: "OVERVIEW", icon: LayoutTemplate },
-                        { id: "status", label: "STATUS", icon: Activity },
+                        { id: "overview", label: t('dashboard.tabs.overview'), icon: LayoutTemplate },
+                        { id: "status", label: t('dashboard.tabs.status'), icon: Activity },
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -132,10 +134,10 @@ export default function Dashboard() {
                             <Card className="hover:shadow-md transition-all cursor-pointer border-l-4 border-l-red-800 group-hover:border-red-600 h-full">
                                 <CardContent className="p-6 flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-gray-500 mb-1">Total Projects</p>
+                                        <p className="text-sm font-medium text-gray-500 mb-1">{t('dashboard.stats.total_projects')}</p>
                                         <h3 className="text-4xl font-bold text-gray-900">{projects.length}</h3>
                                         <div className="mt-2 inline-flex items-center text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                                            {projects.filter(p => p.status === "Active").length} Active
+                                            {projects.filter(p => p.status === "Active").length} {t('dashboard.stats.active_projects')}
                                         </div>
                                     </div>
                                     <div className="p-4 bg-red-50 rounded-full text-red-800 group-hover:bg-red-100 transition-colors">
@@ -150,10 +152,10 @@ export default function Dashboard() {
                             <Card className="hover:shadow-md transition-all cursor-pointer border-l-4 border-l-gray-500 group-hover:border-gray-400 h-full">
                                 <CardContent className="p-6 flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-gray-500 mb-1">Total Repositories</p>
+                                        <p className="text-sm font-medium text-gray-500 mb-1">{t('dashboard.stats.total_repos')}</p>
                                         <h3 className="text-4xl font-bold text-gray-900">{repositories.length}</h3>
                                         <div className="mt-2 inline-flex items-center text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                                            {repositories.filter(r => r.status === "Cloned").length} Cloned
+                                            {repositories.filter(r => r.status === "Cloned").length} {t('dashboard.stats.cloned_repos')}
                                         </div>
                                     </div>
                                     <div className="p-4 bg-gray-100 rounded-full text-gray-700 group-hover:bg-gray-200 transition-colors">
@@ -171,14 +173,14 @@ export default function Dashboard() {
                                         <Activity className="w-6 h-6 text-emerald-600" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-gray-900">System Status</h3>
+                                        <h3 className="font-semibold text-gray-900">{t('dashboard.system_status.title')}</h3>
                                         <p className="text-sm text-gray-500">
-                                            {overview?.system_status?.message || "All systems operational. Backend connected."}
+                                            {overview?.system_status?.message || t('dashboard.system_status.default_message')}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="text-sm text-gray-400">
-                                    Updated: {overview?.system_status?.last_updated ? new Date(overview.system_status.last_updated).toLocaleString() : new Date().toLocaleDateString()}
+                                    {t('dashboard.system_status.updated')}: {overview?.system_status?.last_updated ? new Date(overview.system_status.last_updated).toLocaleString() : new Date().toLocaleDateString()}
                                 </div>
                             </CardContent>
                         </Card>
@@ -197,8 +199,8 @@ export default function Dashboard() {
                                         <Activity className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-bold text-gray-900">Project Status Overview</h2>
-                                        <p className="text-gray-500 text-sm">Real-time status of all active projects and repositories.</p>
+                                        <h2 className="text-xl font-bold text-gray-900">{t('dashboard.status_view.title')}</h2>
+                                        <p className="text-gray-500 text-sm">{t('dashboard.status_view.subtitle')}</p>
                                     </div>
                                 </div>
 
@@ -206,22 +208,22 @@ export default function Dashboard() {
                                     {/* Projects Status Section */}
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                            <Briefcase className="w-4 h-4" /> Projects
+                                            <Briefcase className="w-4 h-4" /> {t('dashboard.status_view.projects_header')}
                                         </h3>
                                         <div className="border border-gray-200 rounded-lg overflow-hidden">
                                             <table className="w-full text-sm text-left">
                                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
                                                     <tr>
-                                                        <th className="px-6 py-3">Project Name</th>
-                                                        <th className="px-6 py-3">Status</th>
-                                                        <th className="px-6 py-3">Owner</th>
-                                                        <th className="px-6 py-3 text-right">Start Date</th>
+                                                        <th className="px-6 py-3">{t('dashboard.status_view.table.project_name')}</th>
+                                                        <th className="px-6 py-3">{t('dashboard.status_view.table.status')}</th>
+                                                        <th className="px-6 py-3">{t('dashboard.status_view.table.owner')}</th>
+                                                        <th className="px-6 py-3 text-right">{t('dashboard.status_view.table.start_date')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
                                                     {projects.length === 0 ? (
                                                         <tr>
-                                                            <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">No projects found</td>
+                                                            <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">{t('dashboard.status_view.no_projects')}</td>
                                                         </tr>
                                                     ) : (
                                                         projects.map((project) => (
@@ -254,22 +256,22 @@ export default function Dashboard() {
                                     {/* Repositories Status Section */}
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                            <FolderOpen className="w-4 h-4" /> Repositories
+                                            <FolderOpen className="w-4 h-4" /> {t('dashboard.status_view.repos_header')}
                                         </h3>
                                         <div className="border border-gray-200 rounded-lg overflow-hidden">
                                             <table className="w-full text-sm text-left">
                                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
                                                     <tr>
-                                                        <th className="px-6 py-3">Repository</th>
-                                                        <th className="px-6 py-3">Scan Status</th>
-                                                        <th className="px-6 py-3">Last Activity</th>
-                                                        <th className="px-6 py-3 text-right">Status</th>
+                                                        <th className="px-6 py-3">{t('dashboard.status_view.table.repository')}</th>
+                                                        <th className="px-6 py-3">{t('dashboard.status_view.table.scan_status')}</th>
+                                                        <th className="px-6 py-3">{t('dashboard.status_view.table.last_activity')}</th>
+                                                        <th className="px-6 py-3 text-right">{t('dashboard.status_view.table.status')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
                                                     {repositories.length === 0 ? (
                                                         <tr>
-                                                            <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">No repositories found</td>
+                                                            <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">{t('dashboard.status_view.no_repos')}</td>
                                                         </tr>
                                                     ) : (
                                                         repositories.map((repo) => (

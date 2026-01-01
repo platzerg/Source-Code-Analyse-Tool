@@ -7,6 +7,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Plus, GripVertical, User, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
+import { useTranslation } from "react-i18next";
 
 interface Task {
     id: string;
@@ -81,6 +82,7 @@ function DraggableTask({ task }: { task: Task }) {
 
 function Column({ id, title, tasks, count, isOver }: { id: string; title: string; tasks: Task[]; count: number; isOver: boolean }) {
     const { setNodeRef } = useDroppable({ id });
+    const { t } = useTranslation();
 
     return (
         <div
@@ -97,7 +99,7 @@ function Column({ id, title, tasks, count, isOver }: { id: string; title: string
                 <div className="space-y-2">
                     {tasks.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 text-sm">
-                            No tasks yet
+                            {t('project_detail.board.empty_column')}
                         </div>
                     ) : (
                         tasks.map((task) => <DraggableTask key={task.id} task={task} />)
@@ -109,6 +111,7 @@ function Column({ id, title, tasks, count, isOver }: { id: string; title: string
 }
 
 export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragDropBoardProps) {
+    const { t } = useTranslation();
     const [activeId, setActiveId] = useState<string | null>(null);
     const [overId, setOverId] = useState<string | null>(null);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -129,9 +132,9 @@ export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragD
     );
 
     const columns = [
-        { id: "Todo", title: "Todo" },
-        { id: "In Progress", title: "In Progress" },
-        { id: "Done", title: "Done" },
+        { id: "Todo", title: t('project_detail.board.columns.todo') },
+        { id: "In Progress", title: t('project_detail.board.columns.in_progress') },
+        { id: "Done", title: t('project_detail.board.columns.done') },
     ];
 
     const getTasksByStatus = (status: string) => {
@@ -274,7 +277,7 @@ export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragD
                 <div className="flex items-center gap-4">
                     <input
                         type="text"
-                        placeholder="Filter cards..."
+                        placeholder={t('project_detail.board.filter_placeholder')}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent w-64"
                     />
                 </div>
@@ -283,7 +286,7 @@ export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragD
                     className="flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors font-medium"
                 >
                     <Plus className="w-4 h-4" />
-                    Add Task
+                    {t('project_detail.board.add_task')}
                 </button>
             </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Plus, Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface MilestoneData {
     label: string;
@@ -27,6 +28,7 @@ export default function CreateMilestoneDialog({
     onMilestoneUpdated,
     initialData
 }: CreateMilestoneDialogProps) {
+    const { t } = useTranslation();
     const isEditMode = !!initialData;
 
     const [label, setLabel] = useState(initialData?.label || "");
@@ -52,7 +54,7 @@ export default function CreateMilestoneDialog({
 
     const handleSubmit = async () => {
         if (!label.trim()) {
-            alert("Please enter a milestone label");
+            alert(t('project_detail.roadmap.create_dialog.validation.label'));
             return;
         }
 
@@ -95,11 +97,17 @@ export default function CreateMilestoneDialog({
                 setProgress(0);
                 onClose();
             } else {
-                alert(`Failed to ${isEditMode ? 'update' : 'create'} milestone. Please try again.`);
+                alert(isEditMode
+                    ? t('project_detail.roadmap.create_dialog.error.update')
+                    : t('project_detail.roadmap.create_dialog.error.create')
+                );
             }
         } catch (error) {
             console.error(`Error ${isEditMode ? 'updating' : 'creating'} milestone:`, error);
-            alert(`Failed to ${isEditMode ? 'update' : 'create'} milestone. Please try again.`);
+            alert(isEditMode
+                ? t('project_detail.roadmap.create_dialog.error.update')
+                : t('project_detail.roadmap.create_dialog.error.create')
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -112,7 +120,12 @@ export default function CreateMilestoneDialog({
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900">{isEditMode ? "Edit Milestone" : "Create New Milestone"}</h2>
+                    <h2 className="text-xl font-bold text-gray-900">
+                        {isEditMode
+                            ? t('project_detail.roadmap.create_dialog.title_edit')
+                            : t('project_detail.roadmap.create_dialog.title_create')
+                        }
+                    </h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -126,13 +139,13 @@ export default function CreateMilestoneDialog({
                     {/* Label */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Milestone Label *
+                            {t('project_detail.roadmap.create_dialog.label')}
                         </label>
                         <input
                             type="text"
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
-                            placeholder="e.g., v2.0 Release"
+                            placeholder={t('project_detail.roadmap.create_dialog.placeholder')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
                             autoFocus
                         />
@@ -141,7 +154,7 @@ export default function CreateMilestoneDialog({
                     {/* Target Date (Start) */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Start Date
+                            {t('project_detail.roadmap.create_dialog.start_date')}
                         </label>
                         <div className="relative">
                             <input
@@ -157,7 +170,7 @@ export default function CreateMilestoneDialog({
                     {/* End Date (Optional) */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            End Date (Optional)
+                            {t('project_detail.roadmap.create_dialog.end_date')}
                         </label>
                         <div className="relative">
                             <input
@@ -174,7 +187,7 @@ export default function CreateMilestoneDialog({
                     {/* Progress */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Progress (%)
+                            {t('project_detail.roadmap.create_dialog.progress')}
                         </label>
                         <div className="flex items-center gap-3">
                             <input
@@ -198,7 +211,7 @@ export default function CreateMilestoneDialog({
                         onClick={onClose}
                         className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors font-medium"
                     >
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button
                         onClick={handleSubmit}
@@ -208,12 +221,18 @@ export default function CreateMilestoneDialog({
                         {isSubmitting ? (
                             <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                {isEditMode ? "Saving..." : "Creating..."}
+                                {isEditMode
+                                    ? t('project_detail.roadmap.create_dialog.submitting_edit')
+                                    : t('project_detail.roadmap.create_dialog.submitting_create')
+                                }
                             </>
                         ) : (
                             <>
                                 <Plus className="w-4 h-4" />
-                                {isEditMode ? "Save Changes" : "Create Milestone"}
+                                {isEditMode
+                                    ? t('project_detail.roadmap.create_dialog.submit_edit')
+                                    : t('project_detail.roadmap.create_dialog.submit_create')
+                                }
                             </>
                         )}
                     </button>

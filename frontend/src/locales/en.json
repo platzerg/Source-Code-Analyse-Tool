@@ -1,0 +1,259 @@
+{
+    "navigation": {
+        "dashboard": "Dashboard",
+        "projects": "Projects",
+        "repositories": "Repositories",
+        "settings": "Settings"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "add": "Add",
+        "manage": "Manage",
+        "confirm_delete": "Are you sure you want to delete this item?",
+        "delete_title": "Delete Item",
+        "cannot_undone": "This action cannot be undone."
+    },
+    "dashboard": {
+        "title": "Overview",
+        "subtitle": "System status and activity overview",
+        "loading": "Loading Dashboard...",
+        "tabs": {
+            "overview": "OVERVIEW",
+            "status": "STATUS"
+        },
+        "stats": {
+            "total_projects": "Total Projects",
+            "active_projects": "Active",
+            "total_repos": "Total Repositories",
+            "cloned_repos": "Cloned"
+        },
+        "system_status": {
+            "title": "System Status",
+            "default_message": "All systems operational. Backend connected.",
+            "updated": "Updated"
+        },
+        "status_view": {
+            "title": "Project Status Overview",
+            "subtitle": "Real-time status of all active projects and repositories.",
+            "projects_header": "Projects",
+            "repos_header": "Repositories",
+            "no_projects": "No projects found",
+            "no_repos": "No repositories found",
+            "table": {
+                "project_name": "Project Name",
+                "status": "Status",
+                "owner": "Owner",
+                "start_date": "Start Date",
+                "repository": "Repository",
+                "scan_status": "Scan Status",
+                "last_activity": "Last Activity"
+            }
+        }
+    },
+    "projects": {
+        "title": "Projects",
+        "subtitle": "{{count}} projects found",
+        "add_button": "Add Project",
+        "empty_state": {
+            "title": "No projects yet",
+            "description": "Create your first project to get started."
+        },
+        "card": {
+            "repos_count": "{{count}} Repositories",
+            "manage": "Manage"
+        },
+        "delete_modal": {
+            "title": "Delete Project",
+            "description": "Are you sure you want to delete the project"
+        }
+    },
+    "project_detail": {
+        "back_to_projects": "Back to Projects",
+        "not_found": {
+            "title": "Project not found",
+            "back_link": "Back to Projects"
+        },
+        "tabs": {
+            "repositories": "Repositories",
+            "backlog": "Backlog",
+            "board": "Board",
+            "roadmap": "Roadmap",
+            "insights": "Insights"
+        },
+        "repositories": {
+            "stats": {
+                "connected_repos": "Connected Repos",
+                "active_issues": "Active Issues",
+                "open_prs": "Open PRs",
+                "contributors": "Contributors"
+            },
+            "manage_button": "Manage Repositories",
+            "card": {
+                "cloned": "Cloned",
+                "commits": "Commits",
+                "vulnerabilities": "Vulnerabilities",
+                "view_details": "View Repository Details"
+            }
+        },
+        "backlog": {
+            "search_placeholder": "Filter by keyword or by field",
+            "filter": "Filter",
+            "items_count": "{{count}} items",
+            "add_item": "Add item",
+            "table": {
+                "title": "Title",
+                "status": "Status",
+                "assignee": "Assignee",
+                "priority": "Priority"
+            }
+        },
+        "insights": {
+            "loading": "Loading Project Insights...",
+            "cards": {
+                "tech_debt_ratio": "Tech Debt Ratio",
+                "refactoring_needed": "Refactoring needed",
+                "deployment_freq": "Deployment freq.",
+                "active_contributors": "Active Contributors",
+                "this_week": "This week",
+                "refactor_est": "Refactor Est.",
+                "sprint_buffer": "Sprint buffer",
+                "clear_debt": "To clear high debt"
+            },
+            "charts": {
+                "contributor_analysis": "Contributor Analysis",
+                "commits_dist": "Commits distribution over the last 30 days",
+                "code_churn": "Code Churn (Hotspots)",
+                "churn_desc": "Files with highest modification frequency impacting risk",
+                "recent_changes": "{{count}} recent changes",
+                "high_risk": "High Risk"
+            },
+            "debt": {
+                "title": "Technical Debt",
+                "subtitle": "Estimated effort to resolve debt",
+                "code_smell_ratio": "Code Smell Ratio",
+                "critical": "Critical",
+                "major": "Major",
+                "top_areas": "Top Debt Areas",
+                "complex_logic": "Complex logic without recent tests."
+            },
+            "changelog": {
+                "title": "Project Changelog",
+                "subtitle": "Automated release notes from recent activity",
+                "generate": "Generate",
+                "no_data": "No changelog data available."
+            }
+        },
+        "roadmap": {
+            "title": "Project Roadmap",
+            "subtitle": "Visualize your project timeline, milestones, and deliverables",
+            "add_milestone": "Add Milestone",
+            "settings": {
+                "range_mode": "Range Mode:",
+                "auto_fit": "Auto-Fit Content",
+                "manual": "Manual Range",
+                "start": "Start:",
+                "end": "End:"
+            },
+            "empty_state": "No milestones yet. Click \"Add Milestone\" to start planning.",
+            "delete_modal": {
+                "title": "Delete Milestone",
+                "description": "Are you sure you want to delete milestone"
+            },
+            "tooltip": {
+                "start": "Start:",
+                "end": "End:",
+                "progress": "Progress:",
+                "edit": "Edit Milestone",
+                "delete": "Delete Milestone"
+            },
+            "create_dialog": {
+                "title_create": "Create New Milestone",
+                "title_edit": "Edit Milestone",
+                "label": "Milestone Label *",
+                "placeholder": "e.g., v2.0 Release",
+                "start_date": "Start Date",
+                "end_date": "End Date (Optional)",
+                "progress": "Progress (%)",
+                "submit_create": "Create Milestone",
+                "submit_edit": "Save Changes",
+                "submitting_create": "Creating...",
+                "submitting_edit": "Saving...",
+                "validation": {
+                    "label": "Please enter a milestone label"
+                },
+                "error": {
+                    "create": "Failed to create milestone. Please try again.",
+                    "update": "Failed to update milestone. Please try again."
+                }
+            }
+        },
+        "board": {
+            "filter_placeholder": "Filter cards...",
+            "add_task": "Add Task",
+            "columns": {
+                "todo": "Todo",
+                "in_progress": "In Progress",
+                "done": "Done"
+            },
+            "empty_column": "No tasks yet",
+            "priority": {
+                "low": "Low",
+                "medium": "Medium",
+                "high": "High",
+                "critical": "Critical"
+            },
+            "create_dialog": {
+                "title": "Create New Task",
+                "labels": {
+                    "title": "Task Title *",
+                    "assignee": "Assignee",
+                    "priority": "Priority",
+                    "due_date": "Due Date",
+                    "initial_status": "Initial Status"
+                },
+                "placeholders": {
+                    "title": "Enter task title...",
+                    "assignee": "Enter assignee name..."
+                },
+                "submit": "Create Task",
+                "submitting": "Creating...",
+                "validation": {
+                    "title_required": "Please enter a task title",
+                    "error_create": "Failed to create task. Please try again."
+                }
+            }
+        }
+    },
+    "settings_page": {
+        "title": "Settings",
+        "description": "Manage your application preferences and menu visibility.",
+        "menu_visibility": {
+            "title": "Menu Visibility",
+            "description": "Configure which tabs are visible in the Project and Repository views across the application.",
+            "project_pages": "Project Pages",
+            "repo_pages": "Repository Pages",
+            "tabs": {
+                "overview": "Overview",
+                "technologies": "Technologies",
+                "code_flows": "Code Flows",
+                "code_quality": "Code Quality",
+                "team_staffing": "Team Staffing",
+                "feature_map": "Feature Map",
+                "dependencies": "Dependencies",
+                "security": "Security",
+                "ai_features": "AI Features",
+                "ask_questions": "Ask Questions",
+                "prompt_generation": "Prompt Generation",
+                "pull_requests": "Pull Requests"
+            }
+        },
+        "save_settings": "Save Settings",
+        "saved": "Saved!",
+        "error_save": "Failed to save settings. Please try again."
+    }
+}
