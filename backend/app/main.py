@@ -13,7 +13,9 @@ app = FastAPI(
 )
 
 # Initialize Langfuse tracer (optional - returns None if not configured)
+print("[Main] Initializing Langfuse...", flush=True)
 tracer = configure_langfuse()
+print(f"[Main] Langfuse initialization complete. Tracer: {tracer}", flush=True)
 
 # Configure CORS
 app.add_middleware(

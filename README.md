@@ -75,10 +75,13 @@ A modern web application designed to analyze and manage source code repositories
 
 - **Project Management**: Organize and track multiple source code projects.
 - **Repository Integration**: Clone or upload repositories for deep analysis.
+- **GitHub Integration**: Automatic enrichment with repository metadata (stars, issues, contributors).
 - **AI-Driven Insights**: Automated documentation, code reviews, and bug predictions using AI.
 - **Dashboard Metrics**: Visualize total value, active categories, and project health.
 - **Interactive Roadmap**: Timeline-based Gantt chart with drag-and-drop scheduling.
 - **Real-time Status**: Live streaming of repository cloning and scanning progress.
+- **API Observability**: Optional Langfuse integration for performance monitoring and tracing.
+- **Robust Architecture**: Layered backend with atomic writes, retry logic, and error handling.
 
 ## 🗺️ Application Navigation & Structure
 
@@ -127,15 +130,24 @@ Global configuration for the application.
 
 ### Backend
 - **Framework**: FastAPI (Python 3.12+)
-- **Analysis**: Custom AI simulation and static analysis logic
-- **Server**: Uvicorn with Auto-reload
-- **Data Persistence**: Local JSON-based storage (managed via `projects.json` and `repositories.json`)
+- **Architecture**: Layered architecture with separation of concerns
+  - **Routes Layer**: API endpoints with request/response handling
+  - **Service Layer**: Business logic and orchestration
+  - **Storage Layer**: Robust JSON file handling with atomic writes and backups
+  - **Models Layer**: Pydantic schemas for data validation
+- **External Integrations**: 
+  - GitHub API for repository metadata (stars, issues, contributors)
+  - Robust HTTP client with retry logic and timeout handling
+- **Observability**: Langfuse integration for API tracing and performance monitoring
+- **Server**: Uvicorn with auto-reload
+- **Data Persistence**: Local JSON-based storage with thread-safe operations
 
 ### Frontend
 - **Framework**: Next.js 15 (React)
 - **Styling**: Tailwind CSS
 - **Components**: Lucide Icons, Custom UI components
 - **State Management**: React Hooks & Fetch API
+- **Internationalization**: react-i18next for multi-language support
 
 ## 📋 Getting Started
 
@@ -151,10 +163,24 @@ Global configuration for the application.
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt  # Or use the pyproject.toml dependencies
+pip install -r requirements.txt
 ```
 
-#### 2. Frontend Setup
+#### 2. Configure Langfuse (Optional)
+For API observability and performance monitoring, create a `.env` file in the `backend` directory:
+
+```env
+# Optional - Langfuse Observability
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+Get your free Langfuse account at [https://cloud.langfuse.com](https://cloud.langfuse.com)
+
+**Note**: The application works perfectly without Langfuse credentials. Tracing will be automatically disabled if credentials are not provided.
+
+#### 3. Frontend Setup
 ```powershell
 cd frontend
 npm install
