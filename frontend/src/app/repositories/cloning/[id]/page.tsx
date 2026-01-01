@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function CloningStatusPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -31,14 +32,14 @@ export default function CloningStatusPage({ params }: { params: Promise<{ id: st
 
     useEffect(() => {
         // Fetch repo details for name
-        fetch(`http://localhost:8000/api/v1/repositories/${id}`)
+        fetch(`${API_BASE_URL}/api/v1/repositories/${id}`)
             .then(res => res.json())
             .then(data => setRepoName(data.name))
             .catch(err => console.error("Error fetching repo name:", err));
     }, [id]);
 
     useEffect(() => {
-        const eventSource = new EventSource(`http://localhost:8000/api/v1/repositories/${id}/stream-status?mode=${mode}`);
+        const eventSource = new EventSource(`${API_BASE_URL}/api/v1/repositories/${id}/stream-status?mode=${mode}`);
 
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);

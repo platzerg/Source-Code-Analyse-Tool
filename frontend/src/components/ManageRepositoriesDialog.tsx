@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Check } from "lucide-react";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Repository {
     id: number;
@@ -38,7 +39,7 @@ export default function ManageRepositoriesDialog({
 
     const fetchRepositories = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/v1/repositories");
+            const response = await fetch(`${API_BASE_URL}/api/v1/repositories`);
             if (response.ok) {
                 const data = await response.json();
                 setAllRepositories(data);
@@ -61,7 +62,7 @@ export default function ManageRepositoriesDialog({
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/projects/${projectId}/repositories`, {
+            const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/repositories`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -120,8 +121,8 @@ export default function ManageRepositoriesDialog({
                                     <label
                                         key={repo.id}
                                         className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${isSelected
-                                                ? "border-red-800 bg-red-50"
-                                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                            ? "border-red-800 bg-red-50"
+                                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                             }`}
                                     >
                                         <div className="relative">
@@ -133,8 +134,8 @@ export default function ManageRepositoriesDialog({
                                             />
                                             <div
                                                 className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected
-                                                        ? "bg-red-800 border-red-800"
-                                                        : "border-gray-300 bg-white"
+                                                    ? "bg-red-800 border-red-800"
+                                                    : "border-gray-300 bg-white"
                                                     }`}
                                             >
                                                 {isSelected && <Check className="w-3 h-3 text-white" />}

@@ -72,6 +72,7 @@ import {
     Cell,
     Legend
 } from 'recharts';
+import { API_BASE_URL } from "@/lib/config";
 
 // Hardcoded fallback data deleted... 
 
@@ -186,7 +187,7 @@ export default function RepositoryDetailPage({
 
     useEffect(() => {
         if (activeTab === 'ai-features' && id) {
-            fetch(`http://localhost:8000/api/v1/repositories/${id}/ai-features`)
+            fetch(`${API_BASE_URL}/api/v1/repositories/${id}/ai-features`)
                 .then(res => res.json())
                 .then(data => setAiFeatures(data))
                 .catch(err => console.error("Failed to fetch AI features:", err));
@@ -236,7 +237,7 @@ export default function RepositoryDetailPage({
     useEffect(() => {
         const fetchRepo = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/api/v1/repositories/${id}`);
+                const response = await fetch(`${API_BASE_URL}/api/v1/repositories/${id}`);
                 if (response.ok) {
                     const data = await response.json();
                     setRepo(data);

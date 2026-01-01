@@ -7,6 +7,7 @@ import CreateMilestoneDialog from "@/components/CreateMilestoneDialog";
 import * as Popover from '@radix-ui/react-popover';
 import { Trash2, Edit, MoreHorizontal, GripHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Milestone {
     label: string;
@@ -389,7 +390,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
 
         // Backend update via generic PUT
         try {
-            await fetch(`http://localhost:8000/api/v1/projects/${projectId}/milestones/${encodeURIComponent(label)}`, {
+            await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/milestones/${encodeURIComponent(label)}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updatedMilestone)
@@ -426,7 +427,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
         onMilestonesUpdate(updated);
 
         try {
-            await fetch(`http://localhost:8000/api/v1/projects/${projectId}/milestones/${encodeURIComponent(label)}`, {
+            await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/milestones/${encodeURIComponent(label)}`, {
                 method: "DELETE"
             });
         } catch (error) {

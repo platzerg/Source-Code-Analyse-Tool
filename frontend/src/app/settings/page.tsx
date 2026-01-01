@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Save, Layout } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function GlobalSettingsPage() {
     const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function GlobalSettingsPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch("http://localhost:8000/api/v1/settings");
+                const response = await fetch(`${API_BASE_URL}/api/v1/settings`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.menu_visibility) {
@@ -68,7 +69,7 @@ export default function GlobalSettingsPage() {
     const saveVisibilitySettings = async () => {
         try {
             // Save to backend
-            const response = await fetch("http://localhost:8000/api/v1/settings", {
+            const response = await fetch(`${API_BASE_URL}/api/v1/settings`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -6,6 +6,7 @@ import { LayoutTemplate, Activity, Briefcase, FolderOpen, GitBranch } from "luci
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Project {
     id: number;
@@ -52,9 +53,9 @@ export default function Dashboard() {
         const fetchData = async () => {
             try {
                 const [projectsRes, reposRes, overviewRes] = await Promise.all([
-                    fetch("http://localhost:8000/api/v1/projects"),
-                    fetch("http://localhost:8000/api/v1/repositories"),
-                    fetch("http://localhost:8000/api/v1/overview")
+                    fetch(`${API_BASE_URL}/api/v1/projects`),
+                    fetch(`${API_BASE_URL}/api/v1/repositories`),
+                    fetch(`${API_BASE_URL}/api/v1/overview`)
                 ]);
 
                 if (projectsRes.ok) {

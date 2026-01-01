@@ -184,9 +184,9 @@ docker compose down
 ```
 
 **Access the application:**
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:8000`
-- API Documentation: `http://localhost:8000/docs`
+- Frontend: `http://localhost:3509`
+- Backend API: `http://localhost:8359`
+- API Documentation: `http://localhost:8359/docs`
 
 **Docker Features:**
 - ✅ One-command deployment

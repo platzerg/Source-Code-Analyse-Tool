@@ -18,8 +18,8 @@
             "security": true,
             "ai-features": true,
             "ask-questions": true,
-            "prompt-generation": true,
-            "pull-requests": true
+            "prompt-generation": false,
+            "pull-requests": false
         }
     }
 }

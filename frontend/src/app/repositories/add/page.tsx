@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function AddRepositoryPage() {
     const router = useRouter();
@@ -34,7 +35,7 @@ export default function AddRepositoryPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8000/api/v1/repositories", {
+            const response = await fetch(`${API_BASE_URL}/api/v1/repositories`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

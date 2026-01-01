@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Calendar } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/config";
 
 interface MilestoneData {
     label: string;
@@ -68,8 +69,8 @@ export default function CreateMilestoneDialog({
             };
 
             const url = isEditMode
-                ? `http://localhost:8000/api/v1/projects/${projectId}/milestones/${encodeURIComponent(initialData.label)}`
-                : `http://localhost:8000/api/v1/projects/${projectId}/milestones`;
+                ? `${API_BASE_URL}/api/v1/projects/${projectId}/milestones/${encodeURIComponent(initialData.label)}`
+                : `${API_BASE_URL}/api/v1/projects/${projectId}/milestones`;
 
             const method = isEditMode ? "PUT" : "POST";
 

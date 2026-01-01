@@ -8,6 +8,7 @@ import { Plus, GripVertical, User, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import CreateTaskDialog from "@/components/CreateTaskDialog";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Task {
     id: string;
@@ -247,7 +248,7 @@ export default function DragDropBoard({ projectId, tasks, onTasksUpdate }: DragD
             // Backend Update (Status only for now, unless we add position API)
             if (activeTask.status !== newStatus) {
                 try {
-                    await fetch(`http://localhost:8000/api/v1/projects/${projectId}/tasks/${activeId}/status?status=${encodeURIComponent(newStatus)}`, {
+                    await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/tasks/${activeId}/status?status=${encodeURIComponent(newStatus)}`, {
                         method: "PUT",
                     });
                 } catch (error) {

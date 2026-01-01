@@ -56,6 +56,7 @@ import ManageRepositoriesDialog from "@/components/ManageRepositoriesDialog";
 import DragDropBoard from "@/components/DragDropBoard";
 import DragDropRoadmap from "@/components/DragDropRoadmap";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Repository {
     id: string;
@@ -129,7 +130,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
     useEffect(() => {
         if (activeTab === 'insights' && id) {
-            fetch(`http://localhost:8000/api/v1/projects/${id}/insights`)
+            fetch(`${API_BASE_URL}/api/v1/projects/${id}/insights`)
                 .then(res => res.json())
                 .then(data => setProjectInsights(data))
                 .catch(err => console.error("Failed to fetch project insights:", err));
@@ -156,7 +157,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     useEffect(() => {
         const fetchProjectData = async () => {
             try {
-                const projectRes = await fetch(`http://localhost:8000/api/v1/projects/${id}`);
+                const projectRes = await fetch(`${API_BASE_URL}/api/v1/projects/${id}`);
 
                 if (projectRes.ok) {
                     const projectData = await projectRes.json();
@@ -185,7 +186,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 }
 
                 // Fetch only linked repositories
-                const reposRes = await fetch(`http://localhost:8000/api/v1/projects/${id}/repositories`);
+                const reposRes = await fetch(`${API_BASE_URL}/api/v1/projects/${id}/repositories`);
                 if (reposRes.ok) {
                     const reposData = await reposRes.json();
                     const mappedRepos: Repository[] = reposData.map((r: any) => ({

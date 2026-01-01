@@ -5,7 +5,7 @@ services:
     container_name: source-code-analysis-backend
     restart: always
     ports:
-      - "8000:8000"
+      - "8359:8000"
     environment:
       # Langfuse Observability (optional)
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
@@ -24,13 +24,16 @@ services:
 
   # Frontend Service
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8359
     container_name: source-code-analysis-frontend
     restart: always
     ports:
-      - "3000:3000"
+      - "3509:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8359
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/" ]
       interval: 30s

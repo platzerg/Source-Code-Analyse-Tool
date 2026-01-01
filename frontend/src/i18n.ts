@@ -1,17 +1,19 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import resourcesToBackend from 'i18next-resources-to-backend';
+
+// Import translations directly to ensure they're available during SSR
+import en from './locales/en.json';
 
 i18n
     .use(initReactI18next)
-    .use(
-        resourcesToBackend((language: string, namespace: string) =>
-            import(`./locales/${language}.json`)
-        )
-    )
     .init({
         lng: 'en', // Default language
         fallbackLng: 'en',
+        resources: {
+            en: {
+                translation: en
+            }
+        },
         interpolation: {
             escapeValue: false, // React already safes from xss
         },

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/config";
 
 interface CreateTaskDialogProps {
     isOpen: boolean;
@@ -42,7 +43,7 @@ export default function CreateTaskDialog({
                 due_date: dueDate || new Date().toISOString().split('T')[0]
             };
 
-            const response = await fetch(`http://localhost:8000/api/v1/projects/${projectId}/tasks`, {
+            const response = await fetch(`${API_BASE_URL}/api/v1/projects/${projectId}/tasks`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function AddProjectPage() {
     const router = useRouter();
@@ -30,7 +31,11 @@ export default function AddProjectPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8000/api/v1/projects", {
+
+            // ...
+
+            // ...
+            const response = await fetch(`${API_BASE_URL}/api/v1/projects`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -18,6 +18,7 @@ import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Repository {
     id: string;
@@ -77,7 +78,7 @@ function RepositoriesList() {
 
     const fetchRepositories = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/v1/repositories");
+            const response = await fetch(`${API_BASE_URL}/api/v1/repositories`);
             if (!response.ok) throw new Error("Failed to fetch repositories");
             const data = await response.json();
 
@@ -127,7 +128,7 @@ function RepositoriesList() {
             } : repo
         ));
 
-        const eventSource = new EventSource(`http://localhost:8000/api/v1/repositories/${id}/stream-status?mode=scan`);
+        const eventSource = new EventSource(`${API_BASE_URL}/api/v1/repositories/${id}/stream-status?mode=scan`);
 
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -216,7 +217,7 @@ function RepositoriesList() {
         if (!itemToDelete) return;
 
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/repositories/${itemToDelete.id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/v1/repositories/${itemToDelete.id}`, {
                 method: "DELETE",
             });
 
