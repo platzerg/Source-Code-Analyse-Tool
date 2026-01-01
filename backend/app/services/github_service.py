@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional
 from app.core.http_client import HTTPClient
+from contextlib import nullcontext
 
 class GitHubService:
     def __init__(self, token: str = ""):
@@ -18,17 +19,39 @@ class GitHubService:
         """
         Fetch repository details (stars, issues, etc.) from GitHub.
         """
-        try:
-            data = await self.client.get(f"/repos/{owner}/{repo_name}")
-            return {
-                "stars": data.get("stargazers_count", 0),
-                "open_issues": data.get("open_issues_count", 0),
-                "description": data.get("description", ""),
-                "last_push": data.get("pushed_at", "")
-            }
-        except Exception as e:
-            print(f"GitHub API Error: {e}")
-            return {}
+        # Import tracer from main module
+        from app.main import tracer
+        
+        # Use tracer context if available, otherwise use nullcontext
+        span_context = tracer.start_as_current_span(f"GitHub-API-{owner}/{repo_name}") if tracer else nullcontext()
+        
+        with span_context as span:
+            try:
+                if tracer and span:
+                    span.set_attribute("github.owner", owner)
+                    span.set_attribute("github.repo", repo_name)
+                    span.set_attribute("api.endpoint", f"/repos/{owner}/{repo_name}")
+                
+                data = await self.client.get(f"/repos/{owner}/{repo_name}")
+                
+                result = {
+                    "stars": data.get("stargazers_count", 0),
+                    "open_issues": data.get("open_issues_count", 0),
+                    "description": data.get("description", ""),
+                    "last_push": data.get("pushed_at", "")
+                }
+                
+                if tracer and span:
+                    span.set_attribute("output.stars", result["stars"])
+                    span.set_attribute("output.open_issues", result["open_issues"])
+                
+                return result
+            except Exception as e:
+                if tracer and span:
+                    span.set_attribute("error", str(e))
+                    span.set_attribute("error.type", type(e).__name__)
+                print(f"GitHub API Error: {e}")
+                return {}
 
     async def get_readme(self, owner: str, repo_name: str) -> str:
         try:
