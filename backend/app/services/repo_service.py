@@ -21,9 +21,12 @@ def get_repositories_by_project(project_id: int) -> List[Repository]:
     return RepositoryRepository.get_by_project(project_id)
 
 
-def create_repository(repository_in: RepositoryCreate) -> Repository:
+def create_repository(repository_in: RepositoryCreate, user_id: str = None) -> Repository:
     """Create a new repository in database."""
-    return RepositoryRepository.create(repository_in)
+    repo_data = repository_in.dict()
+    if user_id:
+        repo_data["user_id"] = user_id
+    return RepositoryRepository.create(repo_data)
 
 
 def update_repository_status(repo_id: int, status: str) -> Optional[Repository]:

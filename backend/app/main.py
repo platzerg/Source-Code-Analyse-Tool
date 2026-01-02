@@ -1,15 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import router as api_router
+from app.api.auth import router as auth_router
 from app.core.observability import configure_langfuse
 
 # Global tracer instance (None if Langfuse not configured)
 tracer = None
 
 app = FastAPI(
-    title="Product Catalog API",
-    description="E-commerce product catalog API - Module 1 Exercise",
-    version="0.2.0",
+    title="Source Code Analysis Tool API",
+    description="AI-powered source code analysis and project management",
+    version="2.0.0",
 )
 
 # Initialize Langfuse tracer (optional - returns None if not configured)
@@ -26,6 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(api_router, prefix="/api/v1")
 
 if __name__ == "__main__":

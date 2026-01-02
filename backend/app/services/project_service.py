@@ -20,9 +20,12 @@ def get_project_by_id(project_id: int) -> Optional[Project]:
     return ProjectRepository.get_by_id(project_id)
 
 
-def create_project(project_in: ProjectCreate) -> Project:
+def create_project(project_in: ProjectCreate, user_id: str = None) -> Project:
     """Create a new project in database."""
-    return ProjectRepository.create(project_in)
+    project_data = project_in.dict()
+    if user_id:
+        project_data["user_id"] = user_id
+    return ProjectRepository.create(project_data)
 
 
 def delete_project(project_id: int) -> bool:
