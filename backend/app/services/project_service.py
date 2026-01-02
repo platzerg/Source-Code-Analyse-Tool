@@ -1,114 +1,94 @@
+"""
+Project service layer - refactored to use Supabase database.
+"""
 from typing import List, Optional
-from app.core.config import PROJECTS_FILE
-from app.db.storage import load_json, save_json
 from app.models.schemas import Project, ProjectCreate, ProjectTask, ProjectMilestone
+from app.db.repositories import (
+    ProjectRepository,
+    ProjectTaskRepository,
+    ProjectMilestoneRepository
+)
+
 
 def get_all_projects() -> List[Project]:
-    data = load_json(PROJECTS_FILE, [])
-    return [Project(**p) for p in data]
+    """Get all projects from database."""
+    return ProjectRepository.get_all()
+
 
 def get_project_by_id(project_id: int) -> Optional[Project]:
-    projects = get_all_projects()
-    return next((p for p in projects if p.id == project_id), None)
+    """Get project by ID from database."""
+    return ProjectRepository.get_by_id(project_id)
+
 
 def create_project(project_in: ProjectCreate) -> Project:
-    projects = get_all_projects()
-    new_id = len(projects) + 1
-    new_project = Project(
-        id=new_id,
-        name=project_in.name,
-        description=project_in.description,
-        owner=project_in.owner,
-        start_date=project_in.start_date,
-        status="active"
-    )
-    projects.append(new_project)
-    _save_projects(projects)
-    return new_project
+    """Create a new project in database."""
+    return ProjectRepository.create(project_in)
+
 
 def delete_project(project_id: int) -> bool:
-    projects = get_all_projects()
-    initial_len = len(projects)
-    projects = [p for p in projects if p.id != project_id]
-    if len(projects) < initial_len:
-        _save_projects(projects)
-        return True
-    return False
+    """Delete a project from database."""
+    return ProjectRepository.delete(project_id)
+
 
 def update_project_repos(project_id: int, repo_ids: List[int]) -> bool:
-    projects = get_all_projects()
-    for p in projects:
-        if p.id == project_id:
-            p.repository_ids = repo_ids
-            _save_projects(projects)
-            return True
-    return False
+    """Update project-repository relationships."""
+    return ProjectRepository.set_repositories(project_id, repo_ids)
+
+
+def get_project_repositories(project_id: int) -> List[int]:
+    """Get repository IDs for a project."""
+    return ProjectRepository.get_repositories(project_id)
+
 
 def add_task(project_id: int, task: ProjectTask) -> Optional[ProjectTask]:
-    projects = get_all_projects()
-    for p in projects:
-        if p.id == project_id:
-            if not p.tasks:
-                p.tasks = []
-            p.tasks.append(task)
-            _save_projects(projects)
-            return task
-    return None
+    """Add a task to a project."""
+    return ProjectTaskRepository.create(project_id, task)
+
 
 def update_task_status(project_id: int, task_id: str, status: str) -> bool:
-    projects = get_all_projects()
-    for p in projects:
-        if p.id == project_id and p.tasks:
-            for t in p.tasks:
-                if t.id == task_id:
-                    t.status = status
-                    _save_projects(projects)
-                    return True
-    return False
+    """Update task status."""
+    return ProjectTaskRepository.update_status(task_id, status)
+
+
+def get_project_tasks(project_id: int) -> List[ProjectTask]:
+    """Get all tasks for a project."""
+    return ProjectTaskRepository.get_by_project(project_id)
+
 
 def add_milestone(project_id: int, milestone: ProjectMilestone) -> Optional[ProjectMilestone]:
-    projects = get_all_projects()
-    for p in projects:
-        if p.id == project_id:
-            if not p.milestones:
-                p.milestones = []
-            p.milestones.append(milestone)
-            _save_projects(projects)
-            return milestone
-    return None
+    """Add a milestone to a project."""
+    return ProjectMilestoneRepository.create(project_id, milestone)
+
 
 def delete_milestone(project_id: int, label: str) -> bool:
-    projects = get_all_projects()
-    for p in projects:
-        if p.id == project_id and p.milestones:
-            initial_count = len(p.milestones)
-            p.milestones = [m for m in p.milestones if m.label != label]
-            if len(p.milestones) < initial_count:
-                _save_projects(projects)
-                return True
-    return False
+    """Delete a milestone by label."""
+    return ProjectMilestoneRepository.delete_by_label(project_id, label)
+
 
 def update_milestone(project_id: int, label: str, update_data: ProjectMilestone) -> Optional[ProjectMilestone]:
-    projects = get_all_projects()
-    for p in projects:
-        if p.id == project_id and p.milestones:
-            for i, m in enumerate(p.milestones):
-                if m.label == label:
-                    p.milestones[i] = update_data
-                    _save_projects(projects)
-                    return update_data
+    """Update a milestone."""
+    # Find milestone by label first
+    milestones = ProjectMilestoneRepository.get_by_project(project_id)
+    milestone = next((m for m in milestones if m.label == label), None)
+    
+    if milestone:
+        updates = update_data.dict(exclude_unset=True, exclude={"id"})
+        return ProjectMilestoneRepository.update(milestone.id, updates)
     return None
 
+
 def update_milestone_date(project_id: int, label: str, date: str) -> bool:
-    projects = get_all_projects()
-    for p in projects:
-        if p.id == project_id and p.milestones:
-            for m in p.milestones:
-                if m.label == label:
-                    m.date = date
-                    _save_projects(projects)
-                    return True
+    """Update milestone date."""
+    # Find milestone by label first
+    milestones = ProjectMilestoneRepository.get_by_project(project_id)
+    milestone = next((m for m in milestones if m.label == label), None)
+    
+    if milestone:
+        result = ProjectMilestoneRepository.update(milestone.id, {"start_date": date})
+        return result is not None
     return False
 
-def _save_projects(projects: List[Project]):
-    save_json(PROJECTS_FILE, [p.dict() for p in projects])
+
+def get_project_milestones(project_id: int) -> List[ProjectMilestone]:
+    """Get all milestones for a project."""
+    return ProjectMilestoneRepository.get_by_project(project_id)
