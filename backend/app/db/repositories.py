@@ -31,11 +31,10 @@ class ProjectRepository:
         return None
     
     @staticmethod
-    def create(project: ProjectCreate) -> Project:
+    def create(project_data: Dict[str, Any]) -> Project:
         """Create a new project."""
         supabase = get_supabase()
-        data = project.dict()
-        result = supabase.table("projects").insert(data).execute()
+        result = supabase.table("projects").insert(project_data).execute()
         return Project(**result.data[0])
     
     @staticmethod
@@ -126,11 +125,10 @@ class RepositoryRepository:
         return [Repository(**r) for r in repos_result.data]
     
     @staticmethod
-    def create(repository: RepositoryCreate) -> Repository:
+    def create(repository_data: Dict[str, Any]) -> Repository:
         """Create a new repository."""
         supabase = get_supabase()
-        data = repository.dict()
-        result = supabase.table("repositories").insert(data).execute()
+        result = supabase.table("repositories").insert(repository_data).execute()
         return Repository(**result.data[0])
     
     @staticmethod

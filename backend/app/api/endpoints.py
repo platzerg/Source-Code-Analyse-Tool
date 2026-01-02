@@ -233,7 +233,7 @@ async def create_repository(repo: RepositoryCreate):
             span.set_attribute("input.repo_url", repo.url)
             span.set_attribute("input.username", repo.username)
         
-        new_repo = await repo_service.create_repository(repo)
+        new_repo = repo_service.create_repository(repo)
         
         if tracer and span:
             span.set_attribute("output.repo_id", new_repo.id)
