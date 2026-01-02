@@ -29,10 +29,15 @@ class ProjectTask(BaseModel):
     due_date: str
 
 class ProjectMilestone(BaseModel):
+    id: Optional[int] = None
     label: str
     progress: int
-    date: str
+    start_date: Optional[str] = None  # New field name in database
+    date: Optional[str] = None  # Keep for backward compatibility
     end_date: Optional[str] = None
+    
+    class Config:
+        extra = "allow"  # Allow extra fields from database
 
 class ProjectStats(BaseModel):
     active_issues: int
@@ -42,7 +47,7 @@ class ProjectStats(BaseModel):
 class Project(BaseModel):
     id: int
     name: str
-    description: str
+    description: Optional[str] = None
     owner: str
     start_date: str
     status: str
@@ -50,6 +55,11 @@ class Project(BaseModel):
     milestones: Optional[List[ProjectMilestone]] = None
     stats: Optional[ProjectStats] = None
     repository_ids: Optional[List[int]] = []
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    
+    class Config:
+        extra = "allow"  # Allow extra fields from database
 
 class RepositoryCreate(BaseModel):
     name: str
@@ -177,13 +187,18 @@ class Repository(BaseModel):
     id: int
     name: str
     url: str
-    username: str = ""
+    username: Optional[str] = ""
     main_branch: str = "main"
-    status: str = "Cloned"
-    commit_analysis: str = "Not Started"
-    repo_scan: str = "Not Started"
-    added_at: str
-    scanned_at: str = ""
+    status: str = "cloned"
+    commit_analysis: Optional[str] = "Not Started"
+    repo_scan: Optional[str] = "Not Started"
+    commits_count: Optional[int] = 0
+    vulnerabilities_count: Optional[int] = 0
+    added_at: Optional[str] = None
+    scanned_at: Optional[str] = ""
+    last_analyzed_at: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     analysis_metrics: Optional[Dict[str, Any]] = None
     tech_stack: Optional[List[TechStackItem]] = None
     vulnerabilities: Optional[List[Vulnerability]] = None
@@ -206,8 +221,9 @@ class Repository(BaseModel):
     overview_analysis: Optional[OverviewAnalysis] = None
     pull_requests: Optional[List[PullRequest]] = None
     feature_map: Optional[FeatureMap] = None
-    commits_count: Optional[str] = "0"
-    vulnerabilities_count: Optional[int] = 0
+    
+    class Config:
+        extra = "allow"  # Allow extra fields from database
 
 class AIFeatureResult(BaseModel):
     id: str
