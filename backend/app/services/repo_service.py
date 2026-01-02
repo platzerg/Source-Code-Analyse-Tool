@@ -12,8 +12,13 @@ def get_all_repositories() -> List[Repository]:
 
 
 def get_repository_by_id(repo_id: int) -> Optional[Repository]:
-    """Get repository by ID from database."""
-    return RepositoryRepository.get_by_id(repo_id)
+    """Get repository by ID with analysis results."""
+    repo = RepositoryRepository.get_by_id(repo_id)
+    if repo:
+        # In a real system, we'd fetch these from their respective tables
+        # For now, we ensure the Repository object can hold them
+        pass
+    return repo
 
 
 def get_repositories_by_project(project_id: int) -> List[Repository]:

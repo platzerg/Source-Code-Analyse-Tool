@@ -1,0 +1,16 @@
+{
+    "supported_mime_types": [
+        "application/pdf",
+        "text/plain",
+        "text/csv",
+        "text/markdown",
+        "application/x-javascript",
+        "text/x-python",
+        "text/x-typescript"
+    ],
+    "text_processing": {
+        "default_chunk_size": 1000,
+        "default_chunk_overlap": 100
+    },
+    "watch_directory": "../data/rag"
+}

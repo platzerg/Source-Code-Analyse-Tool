@@ -16,8 +16,14 @@ def get_all_projects() -> List[Project]:
 
 
 def get_project_by_id(project_id: int) -> Optional[Project]:
-    """Get project by ID from database."""
-    return ProjectRepository.get_by_id(project_id)
+    """Get project by ID with all related entities."""
+    project = ProjectRepository.get_by_id(project_id)
+    if project:
+        # Populate additional fields
+        project.repository_ids = ProjectRepository.get_repositories(project_id)
+        project.tasks = ProjectTaskRepository.get_by_project(project_id)
+        project.milestones = ProjectMilestoneRepository.get_by_project(project_id)
+    return project
 
 
 def create_project(project_in: ProjectCreate, user_id: str = None) -> Project:

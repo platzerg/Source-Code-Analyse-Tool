@@ -3,7 +3,18 @@ __pycache__/
 .venv/
 *.py[cod]
 *$py.class
-*.so
+*.swp
+
+# RAG Pipeline Local Data and Logs
+backend_rag_pipeline/data/
+backend_rag_pipeline/repos/
+backend_rag_pipeline/venv/
+backend_rag_pipeline/.env
+backend_rag_pipeline/Google_Drive/credentials.json
+backend_rag_pipeline/Google_Drive/token.json
+*.txt
+*.log
+read_env*.py
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
