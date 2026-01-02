@@ -1,0 +1,20 @@
+# Docker Compose Override for Linux Servers
+#
+# IMPORTANT: This file is for LINUX SERVERS ONLY!
+#
+# SETUP INSTRUCTIONS:
+# 1. On your Linux server, copy this file:
+#    cp docker-compose.linux.yml docker-compose.override.yml
+#
+# 2. Docker Compose will automatically use it alongside docker-compose.yml
+#
+# 3. On Windows, do NOT create docker-compose.override.yml
+#    (it's in .gitignore so it won't be committed)
+
+version: '3.8'
+
+services:
+  backend:
+    # Run container as UID 1000 to match typical Linux user
+    # This fixes file permission issues on Linux hosts
+    user: "1000:1000"

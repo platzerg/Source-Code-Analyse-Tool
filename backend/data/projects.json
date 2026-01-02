@@ -1,16 +1,1 @@
-[
-    {
-        "id": 1,
-        "name": "Ownership Fix Project",
-        "description": "Verifying persistence after file reset",
-        "owner": "Tester",
-        "start_date": "2026-02-01",
-        "status": "active",
-        "tasks": null,
-        "milestones": null,
-        "stats": null,
-        "repository_ids": [
-            1
-        ]
-    }
-]
+[]

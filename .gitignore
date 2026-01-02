@@ -34,3 +34,6 @@ backend/repositories.json
 .DS_Store
 Thumbs.db
 *.swp
+
+# Docker override files (platform-specific)
+docker-compose.override.yml
