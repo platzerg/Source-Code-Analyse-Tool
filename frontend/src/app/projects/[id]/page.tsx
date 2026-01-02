@@ -810,7 +810,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 currentRepositoryIds={project?.repository_ids || []}
                 onSave={(newRepositoryIds) => {
                     // Refresh repositories after save
-                    fetch(`http://localhost:8000/api/v1/projects/${id}/repositories`)
+                    fetch(`${API_BASE_URL}/api/v1/projects/${id}/repositories`)
                         .then(res => res.json())
                         .then(reposData => {
                             const mappedRepos: Repository[] = reposData.map((r: any) => ({

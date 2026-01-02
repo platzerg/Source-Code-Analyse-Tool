@@ -45,14 +45,27 @@ def save_json(file_path: str, data: Any) -> bool:
             if os.path.exists(file_path):
                 shutil.copy2(file_path, f"{file_path}.bak")
 
-            # 2. Atomic Write (write to temp then rename)
+            # 2. Atomic Write Attempt
             temp_path = f"{file_path}.tmp"
-            with open(temp_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4, ensure_ascii=False)
-            
-            # 3. Rename
-            os.replace(temp_path, file_path)
+            try:
+                with open(temp_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=4, ensure_ascii=False)
+                
+                # 3. Rename with fallback
+                try:
+                    os.replace(temp_path, file_path)
+                except OSError as e:
+                    print(f"Warning: Atomic rename failed ({e}). Falling back to copy.", flush=True)
+                    shutil.copy2(temp_path, file_path)
+                    os.remove(temp_path)
+                    
+            except (OSError, PermissionError) as e:
+                print(f"Warning: Failed to create temp file ({e}). Writing directly to {file_path}.", flush=True)
+                # Fallback: Write directly to target file
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=4, ensure_ascii=False)
+                    
             return True
         except Exception as e:
-            print(f"Error saving to {file_path}: {e}")
+            print(f"Error saving to {file_path}: {e}", flush=True)
             return False

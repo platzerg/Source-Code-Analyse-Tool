@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # Data Files
 # Data Files
 # Use /app/data for Docker persistence if it exists, else local directory
-DATA_DIR = "/app/data" if os.path.exists("/app/data") else os.path.join(BASE_DIR, "")
+DATA_DIR = "/app/data" if os.path.exists("/app/data") else os.path.join(BASE_DIR, "data")
 
 PROJECTS_FILE = os.path.join(DATA_DIR, "projects.json")
 REPOSITORIES_FILE = os.path.join(DATA_DIR, "repositories.json")

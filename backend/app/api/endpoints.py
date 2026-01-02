@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import StreamingResponse
 from typing import List, Dict, Any
 import asyncio
@@ -129,8 +129,13 @@ async def get_project(project_id: int):
         
         return project
 
+from fastapi import APIRouter, HTTPException, Body
+# ... (existing imports)
+
+# ... (inside file)
+
 @router.put("/projects/{project_id}/repositories")
-def update_project_repositories(project_id: int, repository_ids: List[int]):
+def update_project_repositories(project_id: int, repository_ids: List[int] = Body(...)):
     success = project_service.update_project_repos(project_id, repository_ids)
     if not success:
         raise HTTPException(status_code=404, detail="Project not found")

@@ -24,12 +24,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY . .
 
-# Create data directory and files if they don't exist
-RUN mkdir -p /app/data && \
-    touch /app/data/projects.json && \
-    touch /app/data/repositories.json && \
-    touch /app/data/settings.json && \
-    touch /app/data/overview.json
+# Create data directory
+RUN mkdir -p /app/data
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app && \
