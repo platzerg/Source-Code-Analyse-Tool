@@ -13,9 +13,6 @@ services:
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
       - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
-    volumes:
-      # Mount data directory for persistence (avoids bind mount inode issues with atomic writes)
-      - ./backend/data:/app/data
     healthcheck:
       test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/v1/health', timeout=5)" ]
       interval: 30s

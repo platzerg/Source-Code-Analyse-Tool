@@ -58,11 +58,11 @@ def configure_langfuse():
 
         print("[Langfuse] Step 6: Getting tracer...", flush=True)
         tracer = trace.get_tracer("source_code_analysis_api")
-        
-        print(f"[Langfuse] ✅ Tracing enabled successfully! Host: {LANGFUSE_HOST}", flush=True)
+
+        print(f"[Langfuse] [OK] Tracing enabled successfully! Host: {LANGFUSE_HOST}", flush=True)
         return tracer
     except Exception as e:
-        print(f"[Langfuse] ❌ Configuration failed at: {e}", flush=True)
+        print(f"[Langfuse] [ERROR] Configuration failed at: {e}", flush=True)
         print(f"[Langfuse] Error type: {type(e).__name__}", flush=True)
         print(f"[Langfuse] Continuing without tracing...", flush=True)
         import traceback

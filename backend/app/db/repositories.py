@@ -247,3 +247,45 @@ class ProjectMilestoneRepository:
             .eq("label", label)\
             .execute()
         return len(result.data) > 0
+
+
+class SystemSettingsRepository:
+    """Repository for System Settings operations."""
+
+    @staticmethod
+    def get(key: str) -> Optional[Dict[str, Any]]:
+        """Get a system setting by key."""
+        supabase = get_supabase()
+        result = supabase.table("system_settings").select("*").eq("key", key).execute()
+        if result.data:
+            return result.data[0]
+        return None
+
+    @staticmethod
+    def get_all() -> List[Dict[str, Any]]:
+        """Get all system settings."""
+        supabase = get_supabase()
+        result = supabase.table("system_settings").select("*").execute()
+        return result.data
+
+    @staticmethod
+    def set(key: str, value: Dict[str, Any], description: str = None) -> Dict[str, Any]:
+        """Set or update a system setting."""
+        supabase = get_supabase()
+        data = {
+            "key": key,
+            "value": value
+        }
+        if description:
+            data["description"] = description
+
+        # Upsert with conflict resolution on 'key' column
+        result = supabase.table("system_settings").upsert(data, on_conflict="key").execute()
+        return result.data[0] if result.data else None
+
+    @staticmethod
+    def delete(key: str) -> bool:
+        """Delete a system setting by key."""
+        supabase = get_supabase()
+        result = supabase.table("system_settings").delete().eq("key", key).execute()
+        return len(result.data) > 0

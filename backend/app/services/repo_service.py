@@ -51,6 +51,20 @@ def get_repository_by_id(repo_id: int) -> Optional[Repository]:
                 "Review Breaking Changes: Thoroughly review all identified breaking changes (API contracts, DTOs, NestJS upgrades) from the monthly summaries to anticipate necessary adjustments during transition."
             ]
         )
+        
+        # MOCK TECH STACK DATA
+        from app.models.schemas import TechStackItem
+        
+        repo.tech_stack = [
+            TechStackItem(name="React", fte=450.5, commits=1250, complexity=6.8, color="#61DAFB"),
+            TechStackItem(name="TypeScript", fte=380.2, commits=980, complexity=7.2, color="#3178C6"),
+            TechStackItem(name="Node.js", fte=220.8, commits=560, complexity=5.5, color="#339933"),
+            TechStackItem(name="Python", fte=180.5, commits=420, complexity=6.1, color="#3776AB"),
+            TechStackItem(name="Docker", fte=95.3, commits=180, complexity=4.8, color="#2496ED"),
+            TechStackItem(name="PostgreSQL", fte=75.2, commits=150, complexity=5.2, color="#4169E1"),
+            TechStackItem(name="FastAPI", fte=65.8, commits=120, complexity=5.9, color="#009688"),
+            TechStackItem(name="Next.js", fte=55.4, commits=95, complexity=6.5, color="#000000"),
+        ]
     return repo
 
 

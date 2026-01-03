@@ -103,10 +103,15 @@ export default function GlobalSettingsPage() {
                     button.innerHTML = originalText;
                     button.disabled = false;
                 }, 2000);
+            } else {
+                // Handle non-ok response
+                const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                console.error("Backend error:", errorData);
+                alert(`${t('settings_page.error_save')}\n\nDetails: ${errorData.detail || errorData.message || 'Unknown error'}`);
             }
         } catch (error) {
             console.error("Error saving settings:", error);
-            alert(t('settings_page.error_save'));
+            alert(`${t('settings_page.error_save')}\n\nError: ${error}`);
         }
     };
 

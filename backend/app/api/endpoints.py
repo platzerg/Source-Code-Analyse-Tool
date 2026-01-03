@@ -11,9 +11,7 @@ from app.models.schemas import (
     Repository, RepositoryCreate, AIFeatureResult, ProjectInsight,
     OverviewAnalysis
 )
-from app.core.config import OVERVIEW_FILE, SETTINGS_FILE
-from app.db.storage import load_json, save_json
-from app.services import project_service, repo_service
+from app.services import project_service, repo_service, settings_service
 
 router = APIRouter()
 
@@ -353,34 +351,35 @@ async def get_project_insights(project_id: int):
 @router.get("/overview")
 def get_overview():
     """Get dashboard overview data including system status"""
-    overview = load_json(OVERVIEW_FILE, {
-        "system_status": {
-            "operational": True, 
-            "message": "System operational", 
-            "last_updated": datetime.now().isoformat()
-        },
-        "stats": {}
-    })
-    
-    # Update stats dynamically
+    # Get system status from Supabase
+    system_status = settings_service.get_system_status()
+
+    # Get stats dynamically from database
     projects = project_service.get_all_projects()
     repositories = repo_service.get_all_repositories()
-    
-    overview["stats"] = {
-        "total_projects": len(projects),
-        "total_repositories": len(repositories),
-        "active_projects": len([p for p in projects if p.status == "Active"]),
-        "cloned_repositories": len([r for r in repositories if r.status == "Cloned"])
+
+    return {
+        "system_status": system_status,
+        "stats": {
+            "total_projects": len(projects),
+            "total_repositories": len(repositories),
+            "active_projects": len([p for p in projects if p.status == "Active"]),
+            "cloned_repositories": len([r for r in repositories if r.status == "Cloned"])
+        }
     }
-    return overview
 
 @router.get("/settings")
 def get_settings():
     """Get application settings including menu visibility"""
-    return load_json(SETTINGS_FILE, {})
+    return settings_service.get_menu_visibility()
 
 @router.post("/settings")
 def update_settings(settings: dict):
     """Update application settings"""
-    save_json(SETTINGS_FILE, settings)
-    return {"message": "Settings updated successfully"}
+    try:
+        settings_service.update_menu_visibility(settings)
+        return {"message": "Settings updated successfully"}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to save settings: {str(e)}")
