@@ -7,7 +7,7 @@ import { API_BASE_URL } from "@/lib/config";
 
 interface MilestoneData {
     label: string;
-    date: string;
+    start_date: string;
     end_date?: string | null;
     progress: number;
 }
@@ -33,7 +33,7 @@ export default function CreateMilestoneDialog({
     const isEditMode = !!initialData;
 
     const [label, setLabel] = useState(initialData?.label || "");
-    const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+    const [startDate, setStartDate] = useState(initialData?.start_date || new Date().toISOString().split('T')[0]);
     const [endDate, setEndDate] = useState(initialData?.end_date || "");
     const [progress, setProgress] = useState(initialData?.progress || 0);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,12 +42,12 @@ export default function CreateMilestoneDialog({
     useEffect(() => {
         if (isOpen && initialData) {
             setLabel(initialData.label);
-            setDate(initialData.date);
+            setStartDate(initialData.start_date);
             setEndDate(initialData.end_date || "");
             setProgress(initialData.progress);
         } else if (isOpen && !initialData) {
             setLabel("");
-            setDate(new Date().toISOString().split('T')[0]);
+            setStartDate(new Date().toISOString().split('T')[0]);
             setEndDate("");
             setProgress(0);
         }
@@ -63,7 +63,7 @@ export default function CreateMilestoneDialog({
         try {
             const milestonePayload = {
                 label: label.trim(),
-                date,
+                start_date: startDate,
                 end_date: endDate || null,
                 progress: parseInt(progress.toString())
             };
@@ -93,7 +93,7 @@ export default function CreateMilestoneDialog({
 
                 // Reset form
                 setLabel("");
-                setDate(new Date().toISOString().split('T')[0]);
+                setStartDate(new Date().toISOString().split('T')[0]);
                 setEndDate("");
                 setProgress(0);
                 onClose();
@@ -160,8 +160,8 @@ export default function CreateMilestoneDialog({
                         <div className="relative">
                             <input
                                 type="date"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
                                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
                             />
                             <Calendar className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
@@ -178,7 +178,7 @@ export default function CreateMilestoneDialog({
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                min={date}
+                                min={startDate}
                                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent"
                             />
                             <Calendar className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />

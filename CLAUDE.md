@@ -4,32 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A **full-stack source code analysis and project management tool** built with FastAPI and Next.js. The application provides AI-driven insights into codebases, manages project workflows with Kanban boards and Gantt roadmaps, and tracks repositories with real-time scanning progress.
+A **full-stack source code analysis and project management tool** built with FastAPI, Next.js, and Supabase. The application provides AI-driven insights into codebases through RAG (Retrieval Augmented Generation), manages project workflows with Kanban boards and Gantt roadmaps, and enables semantic search and chat over repository code.
 
-### Core Architecture
+### Three-Tier Architecture
 
-**Backend (FastAPI):**
-- Single-file API (`backend/app/api/endpoints.py`) with ~793 lines
-- JSON file-based persistence (`projects.json`, `repositories.json`)
-- Server-sent events (SSE) for real-time repository status streaming
-- No database - all data stored in local JSON files
+**Backend API (FastAPI):**
+- Layered architecture: Routes → Services → Repository pattern
+- Supabase for data persistence (PostgreSQL with pgvector)
+- Pydantic models for validation (`app/models/schemas.py`)
+- Optional Langfuse integration for observability/tracing
+- Authentication via Supabase Auth
+
+**RAG Pipeline Service (Python):**
+- Independent worker service for repository analysis
+- Clones Git repositories, parses source code files
+- Generates embeddings and stores vectors in Supabase
+- Supports Google Drive integration for document sync
+- Modular architecture: `common/`, `Local_Files/`, `Google_Drive/`
 
 **Frontend (Next.js 15):**
-- React 19 with Tailwind CSS and Shadcn UI components
+- React 19 with Tailwind CSS and Shadcn UI
+- Supabase client for authentication
 - Dynamic routing: `/projects/[id]`, `/repositories/[id]`
-- Real-time data fetching from backend API
 - Drag-and-drop interfaces using @dnd-kit
-
-**Key Feature:** The application is **100% dynamized** - all UI data comes from the backend JSON files. No hardcoded data except empty states and loading animations.
+- Real-time data fetching from backend API
 
 ## Development Commands
 
-### Backend Setup & Running
+### Backend Setup & Running (Local)
 ```powershell
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1  # PowerShell
-pip install -r requirements.txt  # Install from pyproject.toml dependencies
+# On Unix: source .venv/bin/activate
+pip install -r requirements.txt
+
+# Configure environment (see backend/.env.example)
+# Required: SUPABASE_URL, SUPABASE_SERVICE_KEY
+# Optional: LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST
 
 # Start backend server (port 8000)
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
@@ -38,10 +50,15 @@ pip install -r requirements.txt  # Install from pyproject.toml dependencies
 **Health check:** http://127.0.0.1:8000/api/v1/health
 **API documentation:** http://127.0.0.1:8000/docs
 
-### Frontend Setup & Running
+### Frontend Setup & Running (Local)
 ```powershell
 cd frontend
 npm install
+
+# Configure environment variables
+# NEXT_PUBLIC_API_URL - Backend API URL (defaults to http://localhost:8359)
+# NEXT_PUBLIC_SUPABASE_URL - Supabase project URL
+# NEXT_PUBLIC_SUPABASE_ANON_KEY - Supabase anonymous key
 
 # Development server (port 3000)
 npm run dev
@@ -56,288 +73,336 @@ npm run lint
 
 **Application:** http://localhost:3000
 
-### Linting (Backend)
+### RAG Pipeline Setup & Running (Local)
+```powershell
+cd backend_rag_pipeline
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# Configure environment (see .env.example)
+# Required: SUPABASE_URL, SUPABASE_SERVICE_KEY, EMBEDDING_API_KEY
+# Optional: LANGFUSE_*, GOOGLE_DRIVE_CREDENTIALS_JSON
+
+# Run Git repository monitor
+python docker_entrypoint.py --pipeline git --mode continuous
+
+# Run local file monitor
+python docker_entrypoint.py --pipeline local --mode continuous --directory ./data
+
+# Run Google Drive sync
+python docker_entrypoint.py --pipeline google_drive --mode continuous
+```
+
+### Docker Deployment (Recommended)
+```powershell
+# Start all services (backend, frontend, rag-pipeline)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+docker compose logs -f backend
+docker compose logs -f rag-pipeline
+
+# Stop services
+docker compose down
+
+# Rebuild after code changes
+docker compose up -d --build
+```
+
+**Ports:**
+- Frontend: http://localhost:3509
+- Backend API: http://localhost:8359
+- API Docs: http://localhost:8359/docs
+
+### Testing
 ```powershell
 cd backend
-# Backend uses Ruff for linting and formatting
-ruff check app/
-ruff format app/
+
+# Run all tests
+.\.venv\Scripts\python.exe -m pytest tests -v
+
+# Run specific test file
+.\.venv\Scripts\python.exe -m pytest tests/db/test_project_repository.py -v
+
+# Run with coverage
+.\.venv\Scripts\python.exe -m pytest tests --cov=app --cov-report=term-missing
 ```
 
-Configuration in `backend/pyproject.toml`:
-- Line length: 120 characters
-- Target: Python 3.12+
-- Auto-fix enabled
+**Test structure:**
+- `tests/db/` - Repository layer unit tests
+- `tests/api/` - API endpoint integration tests
+- `tests/integration/` - End-to-end workflow tests
 
-## Data Architecture
+## Backend Architecture
 
-### JSON Storage Pattern
+### Layered Design
 
-All application state lives in two JSON files in the `backend/` directory:
+The backend follows a strict layered architecture:
 
-**`projects.json`** - Project-level data:
-```json
-{
-  "id": 1,
-  "name": "Project Name",
-  "description": "...",
-  "status": "active",
-  "tasks": [...],           // Backlog and Board tasks
-  "milestones": [...],      // Roadmap timeline data
-  "stats": {...},           // Dashboard metrics
-  "repository_ids": [...]   // Linked repositories
-}
+```
+app/
+├── main.py                    # FastAPI app initialization, CORS, router setup
+├── api/
+│   ├── endpoints.py          # API route handlers
+│   └── auth.py               # Authentication endpoints
+├── services/
+│   ├── project_service.py    # Business logic for projects
+│   ├── repo_service.py       # Business logic for repositories
+│   └── github_service.py     # GitHub API integration
+├── db/
+│   ├── repositories.py       # Repository pattern (ProjectRepository, RepositoryRepository)
+│   ├── supabase_client.py    # Supabase client initialization
+│   └── storage.py            # Legacy JSON storage utilities
+├── models/
+│   └── schemas.py            # Pydantic models (Project, Repository, Task, etc.)
+└── core/
+    └── observability.py      # Langfuse configuration
 ```
 
-**`repositories.json`** - Repository-level data:
-```json
-{
-  "id": 1,
-  "name": "repo-name",
-  "status": "Cloned",
-  "repo_scan": "Completed",
-  "tech_stack": [...],           // Technology analysis
-  "overview_analysis": {...},    // AI insights
-  "chat_history": [...],         // Ask Questions tab
-  "feature_requests": [...],     // Prompt Generation
-  "code_flow_requests": [...],   // Code Flows
-  "team_staffing": [...],        // Team recommendations
-  "dead_code": [...],            // Quality metrics
-  "vulnerabilities": [...],      // Security audit
-  "pull_requests": [...],        // PR tracking
-  "dependency_graph": {...},     // Module dependencies
-  "feature_map": {...}           // Feature visualization
-}
-```
+### Repository Pattern
 
-### Data Flow Pattern
+Data access is abstracted through repository classes:
 
-1. **Frontend requests data:** `fetch('http://localhost:8000/api/v1/...')`
-2. **Backend loads JSON:** `load_projects()` or `load_repositories()`
-3. **Backend returns Pydantic models:** FastAPI serializes to JSON
-4. **Frontend renders:** React components display data
+**ProjectRepository** (`db/repositories.py:14-90`)
+- `get_all()` - Fetch all projects
+- `get_by_id(project_id)` - Fetch single project
+- `create(project_data)` - Create new project
+- `update(project_id, updates)` - Update project
+- `delete(project_id)` - Delete project
+- `link_repository(project_id, repo_id)` - Link repo to project
+- `get_repositories(project_id)` - Get linked repositories
 
-**CRITICAL:** When modifying data structures:
-1. Update Pydantic models in `backend/app/api/endpoints.py`
-2. Modify JSON files directly or via API endpoints
-3. Frontend automatically reflects changes (no type updates needed)
+**RepositoryRepository** (`db/repositories.py:93-220`)
+- Similar CRUD operations for repositories
+- Includes methods for managing analysis status
 
-## API Endpoint Patterns
+### Key API Endpoints
 
-### Key Endpoints
+**Authentication:**
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/logout` - User logout
+- `GET /api/v1/auth/user` - Get current user
 
 **Projects:**
 - `GET /api/v1/projects` - List all projects
-- `POST /api/v1/projects` - Create new project
+- `POST /api/v1/projects` - Create project
 - `GET /api/v1/projects/{id}` - Get project details
-- `PUT /api/v1/projects/{id}/repositories` - Link repositories to project
-- `POST /api/v1/projects/{id}/tasks` - Create task
-- `PUT /api/v1/projects/{id}/tasks/{task_id}/status` - Update task status
-- `POST /api/v1/projects/{id}/milestones` - Create milestone
-- `PUT /api/v1/projects/{id}/milestones/{label}/date` - Update milestone dates
+- `PUT /api/v1/projects/{id}` - Update project
 - `DELETE /api/v1/projects/{id}` - Delete project
 
 **Repositories:**
 - `GET /api/v1/repositories` - List all repositories
-- `POST /api/v1/repositories` - Add new repository
+- `POST /api/v1/repositories` - Add repository
 - `GET /api/v1/repositories/{id}` - Get repository details
-- `GET /api/v1/repositories/{id}/stream-status` - SSE for clone/scan progress
-- `POST /api/v1/repositories/{id}/actions/analyze` - Trigger analysis
 - `DELETE /api/v1/repositories/{id}` - Delete repository
 
-**Dashboard:**
-- `GET /api/v1/overview` - System overview with aggregated stats
-- `GET /api/v1/settings` - Global application settings
-- `POST /api/v1/settings` - Update settings
+**Health:**
+- `GET /api/v1/health` - Health check endpoint
 
-### Server-Sent Events (SSE) for Real-time Updates
+## Database Schema (Supabase)
 
-The repository scanning uses SSE streaming at `endpoints.py:359-415`:
+The application uses PostgreSQL via Supabase with the following tables:
 
-```python
-@router.get("/repositories/{repo_id}/stream-status")
-async def stream_repository_status(repo_id: int, mode: str = "clone"):
-    async def event_generator():
-        for progress, message in steps:
-            yield f"data: {json.dumps({'progress': progress, 'message': message})}\n\n"
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
-```
+**Core Tables:**
+- `projects` - Project metadata and configuration
+- `repositories` - Repository information and analysis status
+- `project_repositories` - Many-to-many relationship table
+- `user_profiles` - User account information
 
-**Frontend consumption:** Uses `EventSource` API for live progress bars.
+**RAG Tables:**
+- `documents` - Vectorized code chunks with embeddings (pgvector)
+- `document_metadata` - Metadata about processed files
+- `document_rows` - Individual document rows for tracking
+- `rag_pipeline_state` - Pipeline execution state and history
+
+**SQL Migration Files:** Located in `backend/sql/` directory
+
+## RAG Pipeline Architecture
+
+The RAG pipeline is a separate service that processes repositories for semantic search:
+
+### Workflow
+1. Monitor `repositories` table for new entries with `status='pending'`
+2. Clone repository to local `repos/` directory
+3. Parse source code files (Python, JavaScript, TypeScript, etc.)
+4. Generate embeddings using OpenAI API or compatible provider
+5. Store chunks and vectors in `documents` table
+6. Update repository status to `completed` or `error`
+
+### Key Modules
+- `common/db_handler.py` - Database operations for RAG
+- `common/text_processor.py` - Code parsing and chunking
+- `common/state_manager.py` - Track processed files
+- `repo_watcher.py` - Git repository monitoring
+- `Local_Files/file_watcher.py` - Local directory monitoring
+- `Google_Drive/drive_watcher.py` - Google Drive sync
+
+### Configuration
+- `RAG_PIPELINE_TYPE` - `git`, `local`, or `google_drive`
+- `RUN_MODE` - `continuous` (daemon) or `single` (one-time)
+- `RAG_POLL_INTERVAL` - Polling frequency in seconds (default: 60)
 
 ## Frontend Architecture
 
 ### Page Structure
-
 ```
 frontend/src/app/
 ├── page.tsx                  # Dashboard (/)
+├── login/page.tsx           # Login page
+├── signup/page.tsx          # Registration page
+├── dashboard/page.tsx       # Main dashboard
 ├── projects/
 │   ├── page.tsx             # Projects list
-│   ├── add/page.tsx         # Create project
-│   └── [id]/page.tsx        # Project detail (tabs: Repositories, Backlog, Board, Roadmap, Insights)
+│   └── [id]/page.tsx        # Project detail
 ├── repositories/
 │   ├── page.tsx             # Repositories list
-│   ├── add/page.tsx         # Add repository
-│   ├── cloning/page.tsx     # Clone progress
-│   └── [id]/page.tsx        # Repository detail (13 tabs)
+│   └── [id]/page.tsx        # Repository detail
 └── settings/page.tsx        # Global settings
 ```
 
-### Component Organization
+### Key Components
+- `components/layout/sidebar.tsx` - Main navigation
+- `components/auth/` - Authentication components
+- `components/ui/` - Shadcn UI primitives
+- `components/CreateTaskDialog.tsx` - Task creation modal
+- `components/CreateMilestoneDialog.tsx` - Milestone modal
+- `components/DragDropBoard.tsx` - Kanban board
+- `components/DragDropRoadmap.tsx` - Gantt timeline
 
-**Shared Components (`src/components/`):**
-- `layout/sidebar.tsx` - Main navigation sidebar
-- `ui/` - Shadcn UI primitives (button, dialog, select, etc.)
-- `CreateTaskDialog.tsx` - Task creation modal
-- `CreateMilestoneDialog.tsx` - Milestone creation modal
-- `DragDropBoard.tsx` - Kanban board with drag-and-drop
-- `DragDropRoadmap.tsx` - Gantt timeline with drag-and-drop
-- `ManageRepositoriesDialog.tsx` - Multi-select repository linking
+### Configuration
+**API Base URL:** Configured in `src/lib/config.ts`
+- Client-side: Uses `NEXT_PUBLIC_API_URL` (default: `http://localhost:8359`)
+- Server-side: Uses `INTERNAL_API_URL` (default: `http://backend:8000/api/v1`)
 
-### Drag-and-Drop Patterns
+**Supabase Client:** Configured in `src/lib/supabase.ts`
+- Uses `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-Both Board and Roadmap use `@dnd-kit` for drag-and-drop:
+## Environment Variables
 
-**Board (Kanban):**
-- Drag tasks between columns (To Do, In Progress, Done)
-- Updates task status via `PUT /api/v1/projects/{id}/tasks/{task_id}/status`
+### Backend (`backend/.env`)
+```env
+# Required - Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your_service_key
 
-**Roadmap (Gantt):**
-- Drag milestones to change dates
-- Updates milestone dates via `PUT /api/v1/projects/{id}/milestones/{label}/date`
-
-## Key Development Patterns
-
-### Adding a New Project Tab
-
-1. **Backend:** Add data field to `Project` model in `endpoints.py`
-2. **Backend:** Create endpoint to return data (if needed)
-3. **Frontend:** Add tab to `projects/[id]/page.tsx` tab array
-4. **Frontend:** Create tab content component
-5. **Data:** Manually add field to `projects.json` or generate via API
-
-### Adding a New Repository Analysis Feature
-
-1. **Backend:** Add field to `Repository` model in `endpoints.py`
-2. **Backend:** Create endpoint to populate data (e.g., `/analyze` action)
-3. **Frontend:** Add tab to `repositories/[id]/page.tsx`
-4. **Frontend:** Create visualization component (chart, graph, table)
-5. **Data:** Add sample data to `repositories.json`
-
-### ReactFlow Graph Pattern
-
-Code Flows, Dependencies, and Feature Map use ReactFlow:
-
-```typescript
-import ReactFlow, { Node, Edge } from 'reactflow';
-
-// Load from backend JSON
-const { nodes, edges } = repositoryData.dependency_graph;
-
-// Render graph
-<ReactFlow nodes={nodes} edges={edges} />
+# Optional - Langfuse Observability
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
-**Node structure:**
-```json
-{
-  "id": "node-1",
-  "type": "default",
-  "data": { "label": "Component Name" },
-  "position": { "x": 100, "y": 200 }
-}
+### RAG Pipeline (`backend_rag_pipeline/.env`)
+```env
+# Required - Database
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your_service_key
+
+# Required - AI Embeddings
+EMBEDDING_API_KEY=sk-...
+EMBEDDING_MODEL_CHOICE=text-embedding-3-small
+
+# Pipeline Configuration
+RAG_PIPELINE_TYPE=git
+RUN_MODE=continuous
+RAG_POLL_INTERVAL=60
+
+# Optional - Google Drive
+GOOGLE_DRIVE_CREDENTIALS_JSON={"type": "service_account", ...}
+RAG_WATCH_FOLDER_ID=folder_id
 ```
 
-**Edge structure:**
-```json
-{
-  "id": "edge-1",
-  "source": "node-1",
-  "target": "node-2"
-}
+### Frontend (Environment Variables)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8359
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
+
+## Common Development Tasks
+
+### Adding a New Pydantic Model
+1. Add model class to `backend/app/models/schemas.py`
+2. Use in service layer for validation
+3. Return from API endpoints - FastAPI auto-serializes
+
+### Adding a New API Endpoint
+1. Define route in `backend/app/api/endpoints.py` or `auth.py`
+2. Add business logic to appropriate service in `app/services/`
+3. Use repository layer for database access
+4. Add tests in `tests/api/`
+
+### Adding a New Database Table
+1. Create SQL migration in `backend/sql/`
+2. Run migration via Supabase dashboard or CLI
+3. Add repository methods in `app/db/repositories.py`
+4. Create Pydantic models in `app/models/schemas.py`
+
+### Debugging RAG Pipeline
+```powershell
+# View RAG pipeline logs
+docker compose logs -f rag-pipeline
+
+# Clear all vectorized data (DESTRUCTIVE)
+docker compose exec rag-pipeline python clear_db.py
+
+# Or locally:
+cd backend_rag_pipeline
+python clear_db.py
+```
+
+## Observability
+
+The application supports **optional** Langfuse integration for tracing and monitoring:
+
+- Configured in `backend/app/core/observability.py`
+- Automatically disabled if credentials not provided
+- Traces API requests, LLM calls, and pipeline operations
+- Access dashboard at https://cloud.langfuse.com
+
+**No Langfuse credentials?** The application works perfectly without them.
+
+## Tech Stack
+
+**Backend:**
+- FastAPI 0.128.0+ (Python 3.12+)
+- Supabase client 2.27.0+
+- Pydantic 2.12+ for validation
+- Uvicorn 0.40.0+ for ASGI server
+- Logfire 4.16.0+ for observability
+
+**RAG Pipeline:**
+- Python 3.11+
+- OpenAI embeddings (or compatible)
+- Supabase pgvector for vector storage
+
+**Frontend:**
+- Next.js 15 (React 19, TypeScript 5)
+- Tailwind CSS 4
+- Shadcn UI (Radix UI primitives)
+- @supabase/supabase-js 2.89.0+
+- ReactFlow 11 (graph visualizations)
+- @dnd-kit (drag-and-drop)
 
 ## Important Notes
 
-### Repository Status Flow
-1. **Created** → User adds repository via `/repositories/add`
-2. **Cloning** → SSE stream shows progress at `/repositories/cloning?id={id}&mode=clone`
-3. **Cloned** → Clone complete, scan starts automatically
-4. **Scanning** → SSE stream continues with `mode=scan`
-5. **Completed** → All analysis data populated in `repositories.json`
+### Docker Compose Ports
+- **Production ports** (Docker): Frontend 3509, Backend 8359
+- **Development ports** (local): Frontend 3000, Backend 8000
+- Frontend `config.ts` defaults to port 8359 for Docker compatibility
 
-### Task Status Values
-- `"Todo"` - Not started
-- `"In Progress"` - Currently working
-- `"Done"` - Completed
+### Authentication Flow
+1. User signs up/logs in via Supabase Auth UI
+2. Frontend receives session from Supabase client
+3. Session token sent in requests to backend API
+4. Backend validates token via Supabase Auth
 
-(Note: API uses exact casing as shown)
+### RAG Pipeline Triggers
+- Automatically monitors `repositories` table
+- Triggered when new repository added with `status='pending'`
+- Updates status to `cloning` → `analyzing` → `completed`
 
-### Milestone Date Fields
-- `date` - Start date (YYYY-MM-DD format)
-- `end_date` - End date for Gantt bar length
-
-### Settings Storage
-Global settings stored in `backend/settings.json`:
-- Menu visibility toggles
-- Application preferences
-
-Per-user settings (menu visibility) also stored in browser `localStorage`.
-
-## Common Troubleshooting
-
-### Backend Not Starting
-- **Check port 8000:** Another process may be using it
-- **Virtual environment:** Ensure `.venv` is activated
-- **Python version:** Requires Python 3.12+
-
-### Frontend API Errors
-- **CORS issues:** Backend already has `allow_origins=["*"]` configured
-- **Wrong API URL:** Check fetch URLs use `http://localhost:8000/api/v1/`
-- **Backend not running:** Start backend first
-
-### JSON File Corruption
-- **Syntax errors:** Validate JSON with `python -m json.tool backend/projects.json`
-- **Missing fields:** Compare with working examples in repository
-- **Backup:** Git history maintains previous versions
-
-### Drag-and-Drop Not Working
-- **Check API response:** Ensure status update endpoints return success
-- **Console errors:** Look for React state update warnings
-- **Re-fetch data:** Component should refetch after drag operation
-
-## Tech Stack Summary
-
-**Backend:**
-- FastAPI 0.118.0+
-- Pydantic 2.11.10+ (data validation)
-- Uvicorn 0.37.0+ (ASGI server)
-- Python 3.12+
-
-**Frontend:**
-- Next.js 15 (App Router)
-- React 19
-- TypeScript 5
-- Tailwind CSS 4
-- Shadcn UI (Radix UI primitives)
-- ReactFlow 11 (graph visualizations)
-- Recharts 3.6 (charts)
-- @dnd-kit (drag-and-drop)
-
-**Development:**
-- Ruff (Python linting/formatting)
-- ESLint (TypeScript linting)
-- Biome (optional TypeScript formatter)
-
-## Deployment Notes
-
-This is a **development/local application** designed for analyzing source code repositories. Not currently designed for production deployment.
-
-**Current limitations:**
-- JSON file storage (not production-grade)
-- No authentication/authorization
-- Single-user design
-- No data persistence layer beyond JSON files
-
-The `9_Agent_SaaS/` directory contains a separate, production-ready AI agent application with proper database integration (see `9_Agent_SaaS/CLAUDE.md`).
+### Testing Database
+Tests use a test Supabase instance or mock data - configure in `tests/conftest.py`

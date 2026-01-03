@@ -11,7 +11,7 @@ import { API_BASE_URL } from "@/lib/config";
 
 interface Milestone {
     label: string;
-    date: string; // ISO date string (YYYY-MM-DD)
+    start_date: string; // ISO date string (YYYY-MM-DD)
     end_date?: string;
     progress: number;
 }
@@ -87,7 +87,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
         }
 
         const allDates = milestones.flatMap(m => {
-            const dates = [new Date(m.date)];
+            const dates = [new Date(m.start_date)];
             if (m.end_date) dates.push(new Date(m.end_date));
             return dates;
         });
@@ -151,7 +151,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
         const uniqueMilestones = Array.from(new Map(milestones.map(m => [m.label, m])).values());
 
         const positions = uniqueMilestones.map(m => {
-            const startDate = new Date(m.date);
+            const startDate = new Date(m.start_date);
             const startPercent = ((startDate.getTime() - timelineConfig.startDate.getTime()) / totalMs) * 100;
 
             let endPercent = undefined;
@@ -252,7 +252,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
     // I will leave the Drag Logic placeholder to be properly implemented or fixed if I can.
 
     // Actually, I can use the dnd-kit `delta.x` and the container width.
-    const [activeDragDate, setActiveDragDate] = useState<{ date: Date; percent: number } | null>(null);
+    const [activeDragDate, setActiveDragDate] = useState<{ date: Date; percent: number; type: 'start' | 'end' | 'move' } | null>(null);
 
     const handleDragMove = (event: any) => {
         const { active, delta } = event;
@@ -289,7 +289,11 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
         const time = timelineConfig.startDate.getTime() + (currentPercent / 100) * totalMs;
         const date = new Date(time);
 
-        setActiveDragDate({ date, percent: currentPercent });
+        let type: 'start' | 'end' | 'move' = 'move';
+        if (activeIdStr.startsWith('left-')) type = 'start';
+        else if (activeIdStr.startsWith('right-')) type = 'end';
+
+        setActiveDragDate({ date, percent: currentPercent, type });
     };
 
     const handleDragEndReal = async (event: DragEndEvent) => {
@@ -332,12 +336,12 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
 
         const totalMs = timelineConfig.endDate.getTime() - timelineConfig.startDate.getTime();
 
-        let newDateStr = milestone.date;
+        let newDateStr = milestone.start_date;
         let newEndDateStr = milestone.end_date;
 
         if (type === 'body') {
             // Move entire block
-            const currentDate = new Date(milestone.date);
+            const currentDate = new Date(milestone.start_date);
             const currentPercent = ((currentDate.getTime() - timelineConfig.startDate.getTime()) / totalMs) * 100;
             const newPercent = Math.max(0, Math.min(100, currentPercent + deltaPercent));
             const newTime = timelineConfig.startDate.getTime() + (newPercent / 100) * totalMs;
@@ -351,7 +355,7 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             }
         } else if (type === 'left') {
             // Resize start
-            const currentDate = new Date(milestone.date);
+            const currentDate = new Date(milestone.start_date);
             const currentPercent = ((currentDate.getTime() - timelineConfig.startDate.getTime()) / totalMs) * 100;
             const newPercent = Math.max(0, Math.min(100, currentPercent + deltaPercent)); // SHOULD constrain < end
             const newTime = timelineConfig.startDate.getTime() + (newPercent / 100) * totalMs;
@@ -373,16 +377,16 @@ export default function DragDropRoadmap({ projectId, milestones, onMilestonesUpd
             const newTime = timelineConfig.startDate.getTime() + (newPercent / 100) * totalMs;
 
             // Constrain: End must be after Start
-            const startDate = new Date(milestone.date);
+            const startDate = new Date(milestone.start_date);
             if (newTime <= startDate.getTime()) return;
 
             newEndDateStr = new Date(newTime).toISOString().split('T')[0];
         }
 
-        if (newDateStr === milestone.date && newEndDateStr === milestone.end_date) return;
+        if (newDateStr === milestone.start_date && newEndDateStr === milestone.end_date) return;
 
         // Optimistic update
-        const updatedMilestone = { ...milestone, date: newDateStr, end_date: newEndDateStr };
+        const updatedMilestone = { ...milestone, start_date: newDateStr, end_date: newEndDateStr };
         const updatedMilestones = milestones.map(m =>
             m.label === label ? updatedMilestone : m
         );
@@ -729,7 +733,7 @@ function DraggableMilestoneWrapper({
             <div className="font-semibold mb-0.5">{milestone.label}</div>
             <div className="grid grid-cols-[auto,1fr] gap-x-2 text-gray-300">
                 <span className="text-gray-400">{t('project_detail.roadmap.tooltip.start')}</span>
-                <span>{formatDate(milestone.date)}</span>
+                <span>{formatDate(milestone.start_date)}</span>
                 {milestone.end_date && (
                     <>
                         <span className="text-gray-400">{t('project_detail.roadmap.tooltip.end')}</span>

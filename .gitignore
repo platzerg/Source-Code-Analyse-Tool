@@ -45,3 +45,4 @@ backend/repositories.json
 .DS_Store
 Thumbs.db
 *.swp
+nul

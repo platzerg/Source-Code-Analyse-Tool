@@ -77,7 +77,7 @@ interface Project {
     status: string;
     updatedAt: string;
     tasks?: Task[];
-    milestones?: { label: string; progress: number; date: string }[];
+    milestones?: { label: string; progress: number; start_date: string; end_date?: string }[];
     stats?: {
         active_issues: number;
         open_prs: number;
