@@ -182,6 +182,28 @@ class OverviewAnalysis(BaseModel):
     recommendations: List[Dict[str, str]]
     project_state: str
 
+class AIImpact(BaseModel):
+    standard_oss_technologies: int
+    estimated_time_savings: str
+    ai_adjusted_effort: str
+
+class RiskAnalysis(BaseModel):
+    high_risk: int
+    medium_risk: int
+    low_risk: int
+
+class ComplexityAnalysis(BaseModel):
+    score: float
+    rating: str # "High Complexity"
+    technology_diversity: int
+    category_spread: int
+    learning_curve: str # "High"
+    risk_level: str # "Medium"
+    stack_complexity_analysis: str
+    ai_impact: AIImpact
+    risk_analysis: RiskAnalysis
+    recommendations: List[str]
+
 class Repository(BaseModel):
     id: int
     name: str
@@ -199,6 +221,7 @@ class Repository(BaseModel):
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     analysis_metrics: Optional[Dict[str, Any]] = None
+    complexity_analysis: Optional[ComplexityAnalysis] = None # New Field
     tech_stack: Optional[List[TechStackItem]] = None
     vulnerabilities: Optional[List[Vulnerability]] = None
     secrets: Optional[List[DetectedSecret]] = None

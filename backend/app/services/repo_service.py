@@ -15,9 +15,42 @@ def get_repository_by_id(repo_id: int) -> Optional[Repository]:
     """Get repository by ID with analysis results."""
     repo = RepositoryRepository.get_by_id(repo_id)
     if repo:
-        # In a real system, we'd fetch these from their respective tables
-        # For now, we ensure the Repository object can hold them
-        pass
+        # Pydantic model will drop extra fields if we just do Repository(**dict), 
+        # but here we are modifying the object found.
+        # Let's verify if repo is a Pydantic object or dict. 
+        # It's returned as Repository object from RepositoryRepository.
+        
+        # MOCK COMPLEXITY DATA
+        from app.models.schemas import ComplexityAnalysis, AIImpact, RiskAnalysis
+        
+        repo.complexity_analysis = ComplexityAnalysis(
+            score=70,
+            rating="High Complexity",
+            technology_diversity=25,
+            category_spread=6,
+            learning_curve="High",
+            risk_level="Medium",
+            stack_complexity_analysis="This project utilizes a modern and comprehensive frontend stack with a strong emphasis on React, TypeScript, and a rich set of UI/UX libraries. The integration of various tools for linting, formatting, testing, and API generation adds to the complexity. Dockerization indicates a structured deployment approach.",
+            ai_impact=AIImpact(
+                standard_oss_technologies=95,
+                estimated_time_savings="30% (~101 days)",
+                ai_adjusted_effort="1880h"
+            ),
+            risk_analysis=RiskAnalysis(
+                high_risk=1,
+                medium_risk=287,
+                low_risk=873
+            ),
+            recommendations=[
+                "Mitigate Key Contributor Risk: Prioritize comprehensive knowledge transfer from start (63% of dev hours) on core architecture, complex features, and multi-target CI/CD deployments to mitigate significant single-point-of-failure risk.",
+                "Frontend & DevOps Expertise: Ensure the transition team has strong expertise in React, TypeScript, Material-UI, and complex CI/CD pipelines (GitHub Actions, Docker, Nginx, AWS/Azure/Porsche/Mercedes deployments).",
+                "Deep Dive into Architectural Shifts: Focus knowledge transfer on major architectural changes like Zustand to context refactoring, API service facade restructuring, and dynamic Nginx/OAuth2 proxy configurations.",
+                "Leverage AI for Boilerplate & Code Comprehension: Utilize AI coding assistants to accelerate boilerplate generation for React/MUI components, Node.js API endpoints, TypeScript definitions, and to rapidly understand existing code patterns.",
+                "Estimated FTE Savings with AI: Expect AI coding assistants to reduce the transition team's initial ramp-up time and common coding task effort by 15-20%, leading to faster productivity.",
+                "Strategic AI Application: Deploy AI for standard technology tasks (React, TypeScript, Node.js, basic CI/CD scripting) but rely on human expertise for complex domain-specific integrations (Zephyr Scale, AI model APIs) and critical architectural decisions.",
+                "Review Breaking Changes: Thoroughly review all identified breaking changes (API contracts, DTOs, NestJS upgrades) from the monthly summaries to anticipate necessary adjustments during transition."
+            ]
+        )
     return repo
 
 
@@ -117,29 +150,48 @@ def get_mock_ai_features(repo_id: int) -> List[AIFeatureResult]:
     """Return mock AI features data."""
     return [
         AIFeatureResult(
-            feature_name="Code Quality Analysis",
+            id="1",
+            type="review",
+            title="Code Quality Review",
+            description="Automated analysis of code quality and style.",
             status="completed",
-            result={
-                "score": 8.5,
-                "issues": 12,
+            content={
+                "issues_found": 12,
+                "critical_severity": "High",
                 "suggestions": ["Reduce cyclomatic complexity", "Add more unit tests"]
-            },
-            timestamp="2026-01-02T10:30:00Z"
+            }
         ),
         AIFeatureResult(
-            feature_name="Security Scan",
+            id="2",
+            type="bug-prediction",
+            title="Security Scan",
+            description="Vulnerability and security risk assessment.",
             status="completed",
-            result={
+            content={
                 "vulnerabilities": 3,
                 "severity": "medium",
                 "details": ["SQL injection risk in query builder", "Outdated dependency: requests"]
-            },
-            timestamp="2026-01-02T10:35:00Z"
+            }
         ),
         AIFeatureResult(
-            feature_name="Documentation Generator",
-            status="in_progress",
-            result={},
-            timestamp="2026-01-02T10:40:00Z"
+            id="3",
+            type="documentation",
+            title="Documentation Generator",
+            description="AI-generated documentation for complex functions.",
+            status="completed",
+            content={
+                "example_file": "backend/app/auth.py"
+            }
+        ),
+        AIFeatureResult(
+            id="4",
+            type="refactor",
+            title="Refactoring Suggestions",
+            description="Identified opportunities for code refactoring.",
+            status="completed",
+            content={
+                "complexity_reduction": "25%",
+                "maintainability_index": "Increased by 15 points"
+            }
         )
     ]

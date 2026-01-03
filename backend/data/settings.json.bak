@@ -19,14 +19,7 @@
             "ai-features": true,
             "ask-questions": true,
             "prompt-generation": true,
-            "pull-requests": true,
-            "claude-md": false,
-            "browse-files": false,
-            "dead-code": false,
-            "change-history": false,
-            "contributors": false,
-            "timeline": false,
-            "complexity": false
+            "pull-requests": true
         }
     }
 }

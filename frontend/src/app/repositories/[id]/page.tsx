@@ -54,8 +54,14 @@ import {
     RotateCw,
     Copy,
     Download,
-    Lock
+    Lock,
+    BrainCircuit,
+    FileCode, // For Dead Code / CLAUDE.md
+    FolderTree, // For Browse Files
+    History as HistoryIcon, // For Change History
+    Clock as ClockIcon, // For Timeline
 } from "lucide-react";
+import ComplexityDashboard from "@/components/repositories/ComplexityDashboard";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -166,6 +172,26 @@ interface Repository {
         nodes: any[];
         edges: any[];
     };
+    complexity_analysis?: {
+        score: number;
+        rating: string;
+        technology_diversity: number;
+        category_spread: number;
+        learning_curve: string;
+        risk_level: string;
+        stack_complexity_analysis: string;
+        ai_impact: {
+            standard_oss_technologies: number;
+            estimated_time_savings: string;
+            ai_adjusted_effort: string;
+        };
+        risk_analysis: {
+            high_risk: number;
+            medium_risk: number;
+            low_risk: number;
+        };
+        recommendations: string[];
+    };
 }
 
 export default function RepositoryDetailPage({
@@ -208,11 +234,18 @@ export default function RepositoryDetailPage({
                 'code-quality': true,
                 'feature-map': true,
                 dependencies: true,
-                security: true, // Note: pulled from tabs list, might differ from settings if list evolved
+                security: true,
                 'ai-features': true,
                 'ask-questions': true,
                 'prompt-generation': true,
-                'pull-requests': true
+                'pull-requests': true,
+                complexity: true,
+                timeline: true,
+                contributors: true,
+                'change-history': true,
+                'dead-code': true,
+                'browse-files': true,
+                'claude-md': true
             });
         }
     }, []);
@@ -564,6 +597,13 @@ export default function RepositoryDetailPage({
                     {[
                         { id: 'overview', label: 'Overview', icon: LayoutTemplate },
                         { id: 'technologies', label: 'Technologies', icon: Zap },
+                        { id: 'complexity', label: 'Complexity', icon: BrainCircuit },
+                        { id: 'timeline', label: 'Timeline', icon: ClockIcon },
+                        { id: 'contributors', label: 'Contributors', icon: Users },
+                        { id: 'change-history', label: 'Change History', icon: HistoryIcon },
+                        { id: 'dead-code', label: 'Dead Code', icon: FileCode },
+                        { id: 'browse-files', label: 'Browse Files', icon: FolderTree },
+                        { id: 'claude-md', label: 'CLAUDE.md', icon: FileText },
                         { id: 'ask-questions', label: 'Ask Questions', icon: MessageSquare },
                         { id: 'prompt-generation', label: 'Prompt Generation', icon: Sparkles },
                         { id: 'code-flows', label: 'Code Flows', icon: GitBranch },
@@ -596,9 +636,28 @@ export default function RepositoryDetailPage({
             <div className="flex-1 bg-white overflow-y-auto">
                 <div className="p-8">
 
+
+
+                    {/* COMPLEXITY TAB CONTENT */}
+                    {activeTab === "complexity" && repo.complexity_analysis && (
+                        <ComplexityDashboard complexity={repo.complexity_analysis} />
+                    )}
+
+                    {/* NEW TABS PLACEHOLDERS */}
+                    {['timeline', 'contributors', 'change-history', 'dead-code', 'browse-files', 'claude-md'].includes(activeTab) && (
+                        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                            <FolderOpen className="w-16 h-16 mb-4 opacity-20" />
+                            <h3 className="text-lg font-semibold text-gray-600 mb-1">Coming Soon</h3>
+                            <p className="text-sm">The <strong>{activeTab.replace('-', ' ').toUpperCase()}</strong> view is currently under development.</p>
+                        </div>
+                    )}
+
                     {/* 1. OVERVIEW TAB */}
                     {activeTab === "overview" && (
                         <div className="space-y-8 animate-in fade-in duration-300">
+
+
+
                             {/* Detailed Metrics Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <Card className="relative overflow-hidden border-none shadow-sm ring-1 ring-gray-100">
