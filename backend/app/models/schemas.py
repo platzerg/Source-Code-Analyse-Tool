@@ -33,7 +33,6 @@ class ProjectMilestone(BaseModel):
     label: str
     progress: int
     start_date: Optional[str] = None  # New field name in database
-    date: Optional[str] = None  # Keep for backward compatibility
     end_date: Optional[str] = None
     
     class Config:
