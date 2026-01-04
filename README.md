@@ -174,7 +174,86 @@ Global configuration for the application.
 
 ## 📋 Getting Started
 
-You can run the application either with **Docker** (recommended for production) or **locally** (for development).
+## 📋 Getting Started
+
+The application supports **three deployment modes** with environment-specific configurations for maximum flexibility.
+
+### 🎯 Quick Start (Choose Your Environment)
+
+Run the interactive setup script:
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+Or choose manually:
+
+### Option 1: Local Development (No Docker)
+**Best for**: Active development with hot-reload
+```bash
+# Backend (Terminal 1)
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1  # Windows
+source .venv/bin/activate     # Linux/Mac
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+# Frontend (Terminal 2)
+cd frontend
+npm install
+npm run dev
+```
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:8000
+- **Uses**: `.env.local` configuration
+
+### Option 2: Local Docker Development
+**Best for**: Testing Docker setup locally
+```bash
+docker compose -f docker-compose.local.yml up -d --build
+```
+- **Frontend**: http://localhost:3509
+- **Backend**: http://localhost:8359
+- **Uses**: `.env.docker` configuration
+
+### Option 3: Production Deployment (Hostinger VPS)
+**Best for**: Production deployment with full services
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+- **Frontend**: http://localhost:3509
+- **Backend**: http://localhost:8359
+- **Uses**: `.env.production` configuration
+
+## ⚙️ Environment Configuration
+
+The application uses environment-specific configuration files:
+
+| Environment | Config File | API URL | Use Case |
+|-------------|-------------|---------|----------|
+| **Local Dev** | `.env.local` | `http://localhost:8000` | Development without Docker |
+| **Local Docker** | `.env.docker` | `http://localhost:8359` | Testing Docker locally |
+| **Production** | `.env.production` | `https://rca-backend-cloud.platzer-agentic-ai.de` | Hostinger VPS deployment |
+
+### Configuration Files Structure:
+```
+├── .env.local          # Local development (not in Git)
+├── .env.docker         # Docker local development
+├── .env.production     # Production deployment
+├── docker-compose.local.yml    # Local Docker setup
+├── docker-compose.prod.yml     # Production Docker setup
+└── start.sh            # Interactive environment selector
+```
+
+### Switching Between Environments:
+- **No manual configuration changes needed**
+- **Automatic environment detection**
+- **Git-friendly** (only `.env.local` is ignored)
+
+## 🔧 Legacy Docker Setup (Deprecated)
+
+For backward compatibility, the original setup is still available:
 
 ### Option 1: Docker Deployment (Recommended)
 

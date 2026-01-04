@@ -46,3 +46,7 @@ backend/repositories.json
 Thumbs.db
 *.swp
 nul
+# Environment Files (Security - Never commit real credentials)
+.env*
+!.env.example
+!.env.*.example

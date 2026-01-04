@@ -1,7 +1,0 @@
-{
-    "name": "docker-proxy-repo",
-    "url": "https://github.com/test/repo",
-    "username": "testuser",
-    "token": "",
-    "main_branch": "main"
-}
