@@ -279,8 +279,11 @@ async def get_repository(repo_id: int):
             raise HTTPException(status_code=404, detail="Repository not found")
         
         if tracer and span:
-            span.set_attribute("output.repo_name", repo.name)
-            span.set_attribute("output.status", repo.status)
+            # Handle both dict and object responses
+            repo_name = repo.get("name") if isinstance(repo, dict) else repo.name
+            repo_status = repo.get("status") if isinstance(repo, dict) else repo.status
+            span.set_attribute("output.repo_name", repo_name)
+            span.set_attribute("output.status", repo_status)
         
         return repo
 

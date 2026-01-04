@@ -574,17 +574,17 @@ export default function RepositoryDetailPage({
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h1 className="text-xl font-semibold text-gray-900">Code Analysis: {repo.name}</h1>
+                                <h1 className="text-xl font-semibold text-gray-900">Code Analysis: {repo?.name || 'Loading...'}</h1>
                                 <span className="bg-emerald-50 text-emerald-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                                    {repo.status}
+                                    {repo?.status || 'Loading'}
                                 </span>
                             </div>
                             <div className="flex items-center gap-3 mt-1 text-sm">
-                                <p className="text-gray-500 font-medium">{repo.url}</p>
-                                {repo.main_branch && (
+                                <p className="text-gray-500 font-medium">{repo?.url || ''}</p>
+                                {repo?.main_branch && (
                                     <span className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-blue-100">
                                         <GitBranch className="w-3 h-3" />
-                                        {repo.main_branch}
+                                        {repo?.main_branch}
                                     </span>
                                 )}
                             </div>
