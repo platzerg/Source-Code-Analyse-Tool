@@ -272,7 +272,7 @@ async def get_repository(repo_id: int):
             span.set_attribute("http.route", "/api/v1/repositories/{repo_id}")
             span.set_attribute("input.repo_id", repo_id)
         
-        repo = repo_service.get_repository_by_id(repo_id)
+        repo = await repo_service.get_repository_by_id_async(repo_id)
         if not repo:
             if tracer and span:
                 span.set_attribute("error", "Repository not found")
@@ -287,7 +287,7 @@ async def get_repository(repo_id: int):
 @router.get("/repositories/{repo_id}/stream-status", tags=["Repositories"])
 async def stream_repository_status(repo_id: int, mode: str = "clone"):
     # This logic involves generator/stream, kept in route for now but calls service for updates
-    repo = repo_service.get_repository_by_id(repo_id)
+    repo = await repo_service.get_repository_by_id_async(repo_id)
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found")
 
@@ -334,7 +334,7 @@ async def stream_repository_status(repo_id: int, mode: str = "clone"):
 
 @router.get("/repositories/{repo_id}/ai-features", response_model=List[AIFeatureResult], tags=["AI Features"])
 async def get_repo_ai_features(repo_id: int):
-    return repo_service.get_mock_ai_features(repo_id)
+    return await repo_service.get_mock_ai_features_async(repo_id)
 
 @router.post("/repositories/{repo_id}/actions/analyze", tags=["AI Features"])
 async def trigger_ai_analysis(repo_id: int, feature_type: str):
@@ -343,7 +343,7 @@ async def trigger_ai_analysis(repo_id: int, feature_type: str):
 
 @router.get("/projects/{project_id}/insights", response_model=List[ProjectInsight], tags=["Project Insights"])
 async def get_project_insights(project_id: int):
-    return repo_service.get_mock_project_insights(project_id)
+    return await repo_service.get_mock_project_insights_async(project_id)
 
 
 # --- 5. Overview and Settings (Direct Storage Access for now) ---

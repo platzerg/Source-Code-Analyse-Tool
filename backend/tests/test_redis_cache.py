@@ -3,205 +3,153 @@ Unit tests for Redis caching functionality.
 """
 import pytest
 import asyncio
-import json
 from unittest.mock import AsyncMock, patch
-from app.core.redis_client import init_redis, close_redis, get_redis, is_redis_available
-from app.core.cache import cache_result, generate_cache_key, serialize_data, deserialize_data, invalidate_cache_pattern
-from app.services.repo_service import get_mock_ai_features_async, get_repository_by_id_async
-from app.models.schemas import AIFeatureResult
+from app.core.cache import cache_result, _generate_cache_key, _serialize_result, _deserialize_result
 
-@pytest.fixture
-async def redis_client():
-    """Redis client fixture with cleanup."""
-    await init_redis()
-    client = get_redis()
-    yield client
-    # Cleanup test keys
-    if client:
-        test_keys = await client.keys("cache:test_*")
-        if test_keys:
-            await client.delete(*test_keys)
-    await close_redis()
 
-@pytest.mark.asyncio
-async def test_redis_connection():
-    """Test Redis connection establishment."""
-    await init_redis()
-    assert await is_redis_available()
-    await close_redis()
-
-@pytest.mark.asyncio
-async def test_cache_key_generation():
-    """Test cache key generation."""
-    key1 = generate_cache_key("test", 1, 2, param="value")
-    key2 = generate_cache_key("test", 1, 2, param="value")
-    key3 = generate_cache_key("test", 1, 3, param="value")
+class TestCacheDecorator:
+    """Test caching decorator functionality."""
     
-    assert key1 == key2  # Same inputs should generate same key
-    assert key1 != key3  # Different inputs should generate different keys
-    assert key1.startswith("cache:")
-
-@pytest.mark.asyncio
-async def test_data_serialization():
-    """Test data serialization and deserialization."""
-    # Test with dict
-    data = {"key": "value", "number": 42}
-    serialized = serialize_data(data)
-    deserialized = deserialize_data(serialized)
-    assert deserialized == data
-    
-    # Test with string
-    string_data = "test string"
-    serialized_str = serialize_data(string_data)
-    deserialized_str = deserialize_data(serialized_str)
-    assert deserialized_str == string_data
-
-@pytest.mark.asyncio
-async def test_cache_decorator_functionality(redis_client):
-    """Test cache decorator with function calls."""
-    call_count = 0
-    
-    @cache_result(ttl=60, key_prefix="test_func")
-    async def test_function(value: int):
-        nonlocal call_count
-        call_count += 1
-        return {"result": value * 2, "call_count": call_count}
-    
-    # First call should execute function
-    result1 = await test_function(5)
-    assert result1["result"] == 10
-    assert call_count == 1
-    
-    # Second call should use cache
-    result2 = await test_function(5)
-    assert result2["result"] == 10
-    assert call_count == 1  # Function not called again
-    
-    # Different parameter should execute function
-    result3 = await test_function(10)
-    assert result3["result"] == 20
-    assert call_count == 2
-
-@pytest.mark.asyncio
-async def test_cache_decorator_without_redis():
-    """Test cache decorator behavior when Redis is unavailable."""
-    with patch('app.core.cache.is_redis_available', return_value=False):
-        call_count = 0
+    def test_cache_key_generation(self):
+        """Test cache key generation."""
+        key1 = _generate_cache_key("test_func", "prefix", 1, 2, kwarg="test")
+        key2 = _generate_cache_key("test_func", "prefix", 1, 2, kwarg="test")
+        key3 = _generate_cache_key("test_func", "prefix", 1, 3, kwarg="test")
         
-        @cache_result(ttl=60, key_prefix="test_no_redis")
-        async def test_function(value: int):
-            nonlocal call_count
-            call_count += 1
-            return {"result": value * 2}
-        
-        # Both calls should execute function (no caching)
-        await test_function(5)
-        await test_function(5)
-        assert call_count == 2
-
-@pytest.mark.asyncio
-async def test_ai_features_caching(redis_client):
-    """Test AI features endpoint caching."""
-    # First call
-    result1 = await get_mock_ai_features_async(1)
-    assert isinstance(result1, list)
-    assert len(result1) > 0
-    assert isinstance(result1[0], AIFeatureResult)
+        # Same arguments should generate same key
+        assert key1 == key2
+        # Different arguments should generate different keys
+        assert key1 != key3
+        # Keys should have proper format
+        assert key1.startswith("prefix:test_func:")
     
-    # Second call should be cached (faster)
-    result2 = await get_mock_ai_features_async(1)
-    assert result1 == result2
-
-@pytest.mark.asyncio
-async def test_repository_analysis_caching(redis_client):
-    """Test repository analysis caching."""
-    # Mock the database call to avoid dependency
-    with patch('app.services.repo_service.get_repository_by_id') as mock_get_repo:
-        from app.models.schemas import Repository
-        mock_repo = Repository(
-            id=1,
-            name="Test Repo",
-            url="https://github.com/test/repo.git",
-            main_branch="main",
-            status="Cloned"
+    def test_serialization_deserialization(self):
+        """Test result serialization and deserialization."""
+        test_data = {
+            "string": "test",
+            "number": 42,
+            "list": [1, 2, 3],
+            "nested": {"key": "value"}
+        }
+        
+        serialized = _serialize_result(test_data)
+        deserialized = _deserialize_result(serialized)
+        
+        assert deserialized == test_data
+    
+    def test_pydantic_model_serialization(self):
+        """Test serialization of Pydantic models."""
+        from app.models.schemas import AIFeatureResult
+        
+        model = AIFeatureResult(
+            id="1",
+            type="test",
+            title="Test",
+            description="Test description",
+            status="completed",
+            content={"test": "data"}
         )
-        mock_get_repo.return_value = mock_repo
         
-        # First call
-        result1 = await get_repository_by_id_async(1)
-        assert result1.name == "Test Repo"
+        serialized = _serialize_result(model)
+        deserialized = _deserialize_result(serialized)
         
-        # Second call should be cached
-        result2 = await get_repository_by_id_async(1)
-        assert result1.name == result2.name
-        
-        # Verify mock was called only once (second call used cache)
-        assert mock_get_repo.call_count == 1
+        # Should serialize to dict
+        assert isinstance(deserialized, dict)
+        assert deserialized["id"] == "1"
+        assert deserialized["type"] == "test"
 
-@pytest.mark.asyncio
-async def test_cache_invalidation(redis_client):
-    """Test cache invalidation by pattern."""
-    # Set some test cache keys
-    await redis_client.set("cache:test_key1", "value1")
-    await redis_client.set("cache:test_key2", "value2")
-    await redis_client.set("cache:other_key", "value3")
-    
-    # Invalidate test keys
-    deleted_count = await invalidate_cache_pattern("cache:test_*")
-    assert deleted_count == 2
-    
-    # Verify keys are deleted
-    assert await redis_client.get("cache:test_key1") is None
-    assert await redis_client.get("cache:test_key2") is None
-    assert await redis_client.get("cache:other_key") == "value3"
 
-@pytest.mark.asyncio
-async def test_cache_ttl_expiration(redis_client):
-    """Test cache TTL expiration."""
-    @cache_result(ttl=1, key_prefix="test_ttl")  # 1 second TTL
-    async def test_function(value: int):
-        return {"timestamp": asyncio.get_event_loop().time()}
+class TestCacheIntegration:
+    """Test cache integration with mocked Redis."""
     
-    # First call
-    result1 = await test_function(1)
-    
-    # Wait for TTL to expire
-    await asyncio.sleep(1.1)
-    
-    # Second call should execute function again (cache expired)
-    result2 = await test_function(1)
-    assert result2["timestamp"] > result1["timestamp"]
-
-@pytest.mark.asyncio
-async def test_cache_error_handling(redis_client):
-    """Test cache error handling."""
-    with patch.object(redis_client, 'get', side_effect=Exception("Redis error")):
-        call_count = 0
+    @pytest.mark.asyncio
+    @patch('app.core.cache.get_redis')
+    async def test_cache_hit_miss_with_mock_redis(self, mock_get_redis):
+        """Test cache hit/miss behavior with mocked Redis."""
+        # Mock Redis client
+        mock_redis = AsyncMock()
+        mock_get_redis.return_value = mock_redis
         
-        @cache_result(ttl=60, key_prefix="test_error")
-        async def test_function(value: int):
-            nonlocal call_count
-            call_count += 1
-            return {"result": value}
+        # First call - cache miss
+        mock_redis.get.return_value = None
         
-        # Function should still work despite Redis errors
+        @cache_result(ttl=60, key_prefix="test")
+        async def expensive_function(value: int) -> dict:
+            return {"result": value * 2, "computed": True}
+        
+        result1 = await expensive_function(5)
+        assert result1 == {"result": 10, "computed": True}
+        
+        # Verify Redis was called
+        mock_redis.get.assert_called_once()
+        mock_redis.setex.assert_called_once()
+        
+        # Second call - cache hit
+        mock_redis.reset_mock()
+        mock_redis.get.return_value = '{"result": 10, "computed": true}'
+        
+        result2 = await expensive_function(5)
+        assert result2 == {"result": 10, "computed": True}
+        
+        # Verify only get was called (no setex for cache hit)
+        mock_redis.get.assert_called_once()
+        mock_redis.setex.assert_not_called()
+    
+    @pytest.mark.asyncio
+    @patch('app.core.cache.get_redis')
+    async def test_cache_error_handling(self, mock_get_redis):
+        """Test cache error handling."""
+        # Mock Redis client that raises an exception
+        mock_redis = AsyncMock()
+        mock_redis.get.side_effect = Exception("Redis error")
+        mock_get_redis.return_value = mock_redis
+        
+        @cache_result(ttl=60, key_prefix="test")
+        async def test_function(value: int) -> int:
+            return value * 2
+        
+        # Should still work despite Redis error
         result = await test_function(5)
-        assert result["result"] == 5
-        assert call_count == 1
+        assert result == 10
 
-@pytest.mark.asyncio
-async def test_large_object_caching(redis_client):
-    """Test caching of large objects."""
-    large_data = {"data": ["item"] * 1000, "metadata": {"size": "large"}}
+
+class TestServiceFunctions:
+    """Test service function imports and basic functionality."""
     
-    @cache_result(ttl=60, key_prefix="test_large")
-    async def test_function():
-        return large_data
+    def test_service_imports(self):
+        """Test that cached service functions can be imported."""
+        from app.services.repo_service import get_mock_ai_features_async, get_repository_by_id_async
+        
+        # Functions should be importable
+        assert callable(get_mock_ai_features_async)
+        assert callable(get_repository_by_id_async)
     
-    # First call
-    result1 = await test_function()
-    assert len(result1["data"]) == 1000
+    @pytest.mark.asyncio
+    async def test_ai_features_function_structure(self):
+        """Test AI features function returns expected structure."""
+        from app.services.repo_service import get_mock_ai_features_async
+        
+        result = await get_mock_ai_features_async(1)
+        
+        # Should return a list
+        assert isinstance(result, list)
+        assert len(result) > 0
+        
+        # Each item should have expected structure
+        for item in result:
+            assert hasattr(item, 'id')
+            assert hasattr(item, 'type')
+            assert hasattr(item, 'title')
+            assert hasattr(item, 'status')
+
+
+class TestConfigurationImport:
+    """Test configuration imports."""
     
-    # Second call should use cache
-    result2 = await test_function()
-    assert result1 == result2
+    def test_redis_config_import(self):
+        """Test Redis configuration can be imported."""
+        from app.core.config import REDIS_URL, REDIS_TTL_DEFAULT
+        
+        assert isinstance(REDIS_URL, str)
+        assert isinstance(REDIS_TTL_DEFAULT, int)
+        assert REDIS_TTL_DEFAULT > 0

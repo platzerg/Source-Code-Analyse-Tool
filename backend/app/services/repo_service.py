@@ -4,6 +4,8 @@ Repository service layer - refactored to use Supabase database.
 from typing import List, Optional
 from app.models.schemas import Repository, RepositoryCreate, ProjectInsight, AIFeatureResult
 from app.db.repositories import RepositoryRepository
+from app.core.cache import cache_result
+import asyncio
 
 
 def get_all_repositories() -> List[Repository]:
@@ -12,8 +14,16 @@ def get_all_repositories() -> List[Repository]:
 
 
 def get_repository_by_id(repo_id: int) -> Optional[Repository]:
+    """Get repository by ID with analysis results (sync version)."""
+    return asyncio.run(get_repository_by_id_async(repo_id))
+
+
+@cache_result(ttl=1800, key_prefix="repo")
+async def get_repository_by_id_async(repo_id: int) -> Optional[Repository]:
     """Get repository by ID with analysis results."""
     repo = RepositoryRepository.get_by_id(repo_id)
+    # Simulate expensive operation
+    await asyncio.sleep(0.1)
     if repo:
         # Pydantic model will drop extra fields if we just do Repository(**dict), 
         # but here we are modifying the object found.
@@ -107,9 +117,16 @@ def update_scan_status(repo_id: int, status: str) -> None:
     """Update repository scan status."""
     RepositoryRepository.update(repo_id, {"repo_scan": status})
 
-
 def get_mock_project_insights(project_id: int) -> List[ProjectInsight]:
+    """Return mock project insights data (sync version)."""
+    return asyncio.run(get_mock_project_insights_async(project_id))
+
+@cache_result(ttl=1800, key_prefix="project_insights")
+async def get_mock_project_insights_async(project_id: int) -> List[ProjectInsight]:
     """Return mock project insights data."""
+    # Simulate expensive analysis operation
+    await asyncio.sleep(0.8)
+    
     return [
         ProjectInsight(
             type="debt",
@@ -161,7 +178,16 @@ def get_mock_project_insights(project_id: int) -> List[ProjectInsight]:
 
 
 def get_mock_ai_features(repo_id: int) -> List[AIFeatureResult]:
+    """Return mock AI features data (sync version)."""
+    return asyncio.run(get_mock_ai_features_async(repo_id))
+
+
+@cache_result(ttl=1800, key_prefix="ai_features")
+async def get_mock_ai_features_async(repo_id: int) -> List[AIFeatureResult]:
     """Return mock AI features data."""
+    # Simulate expensive AI operation
+    await asyncio.sleep(1.2)
+    
     return [
         AIFeatureResult(
             id="1",

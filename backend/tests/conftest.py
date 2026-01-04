@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db.supabase_client import get_supabase
+from app.core.redis_client import get_redis, reset_redis_client
 import os
 
 @pytest.fixture(scope="session")
@@ -46,3 +47,23 @@ def test_repo(db):
     yield repo
     # Cleanup
     db.table("repositories").delete().eq("id", repo["id"]).execute()
+
+@pytest.fixture
+async def redis_fixture():
+    """Redis test fixture with cleanup."""
+    client = await get_redis()
+    if client:
+        # Clean up any existing test keys
+        await client.flushdb()
+    yield client
+    if client:
+        # Clean up after test
+        await client.flushdb()
+    # Reset client for next test
+    reset_redis_client()
+
+@pytest.fixture
+def test_redis_fixture():
+    """Sync wrapper for Redis fixture."""
+    import asyncio
+    return asyncio.run(redis_fixture())

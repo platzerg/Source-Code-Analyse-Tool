@@ -13,6 +13,8 @@ services:
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
       - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      # Redis Configuration
+      - REDIS_URL=redis://scat-redis:6379
     healthcheck:
       test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/v1/health', timeout=5)" ]
       interval: 30s

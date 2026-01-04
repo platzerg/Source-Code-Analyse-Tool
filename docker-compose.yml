@@ -1,4 +1,20 @@
 services:
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: scat-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 100mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
   # Backend API Service
   backend:
     build: ./backend
@@ -13,12 +29,16 @@ services:
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
       - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      # Redis Configuration
+      - REDIS_URL=redis://scat-redis:6379
     healthcheck:
       test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/v1/health', timeout=5)" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    depends_on:
+      - redis
 
   # Frontend Service
   frontend:
@@ -63,4 +83,5 @@ services:
       - backend
 
 volumes:
+  redis-data:
   backend-data:

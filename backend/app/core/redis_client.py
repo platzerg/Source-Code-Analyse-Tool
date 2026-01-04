@@ -1,61 +1,63 @@
 """
-Redis client singleton for async operations.
+Redis client singleton for caching operations.
 """
-import os
 import redis.asyncio as redis
+import os
 from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Global Redis client instance
 _redis_client: Optional[redis.Redis] = None
 
-def get_redis_url() -> str:
-    """Get Redis URL from environment variables."""
-    return os.getenv("REDIS_URL", "redis://localhost:6379")
 
-async def init_redis() -> None:
-    """Initialize Redis connection."""
-    global _redis_client
-    try:
-        redis_url = get_redis_url()
-        _redis_client = redis.from_url(
-            redis_url,
-            encoding="utf-8",
-            decode_responses=True,
-            max_connections=20,
-            retry_on_timeout=True
-        )
-        # Test connection
-        await _redis_client.ping()
-        logger.info(f"Redis connected successfully to {redis_url}")
-    except Exception as e:
-        logger.error(f"Failed to connect to Redis: {e}")
-        _redis_client = None
+async def get_redis() -> Optional[redis.Redis]:
+    """
+    Get or create Redis client singleton.
 
-async def close_redis() -> None:
-    """Close Redis connection."""
+    Returns:
+        Optional[redis.Redis]: Redis client instance or None if connection fails
+    """
     global _redis_client
-    if _redis_client:
+
+    if _redis_client is None:
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+
         try:
-            await _redis_client.close()
-            logger.info("Redis connection closed")
+            _redis_client = redis.from_url(
+                redis_url,
+                encoding="utf-8",
+                decode_responses=True,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True,
+                health_check_interval=30
+            )
+            # Test connection
+            await _redis_client.ping()
+            logger.info(f"[Redis] Connected to {redis_url}")
         except Exception as e:
-            logger.error(f"Error closing Redis connection: {e}")
-        finally:
+            logger.warning(f"[Redis] Connection failed: {e}. Caching disabled.")
             _redis_client = None
 
-def get_redis() -> Optional[redis.Redis]:
-    """Get Redis client instance."""
     return _redis_client
 
-async def is_redis_available() -> bool:
-    """Check if Redis is available."""
-    if not _redis_client:
-        return False
-    try:
-        await _redis_client.ping()
-        return True
-    except Exception:
-        return False
+
+async def init_redis():
+    """Initialize Redis connection during application startup."""
+    await get_redis()
+
+
+async def close_redis():
+    """Close Redis connection during application shutdown."""
+    global _redis_client
+    if _redis_client:
+        await _redis_client.aclose()
+        _redis_client = None
+        logger.info("[Redis] Connection closed")
+
+
+def reset_redis_client():
+    """Reset the Redis client (useful for testing)."""
+    global _redis_client
+    _redis_client = None

@@ -1,98 +1,98 @@
 """
-Response caching middleware for Redis.
+Response caching middleware for GET requests.
 """
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response as StarletteResponse
 import json
 import hashlib
-from typing import Callable
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse
 import logging
-from app.core.redis_client import get_redis, is_redis_available
+from app.core.redis_client import get_redis
 
 logger = logging.getLogger(__name__)
 
+
 class CacheMiddleware(BaseHTTPMiddleware):
     """Middleware to cache GET responses in Redis."""
-    
+
     def __init__(self, app, ttl: int = 300, exclude_paths: list = None):
         super().__init__(app)
         self.ttl = ttl
         self.exclude_paths = exclude_paths or ["/api/v1/auth", "/api/v1/health", "/docs", "/openapi.json"]
-    
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+
+    async def dispatch(self, request: Request, call_next):
         # Only cache GET requests
         if request.method != "GET":
             return await call_next(request)
-        
+
         # Skip excluded paths
         if any(request.url.path.startswith(path) for path in self.exclude_paths):
             return await call_next(request)
-        
-        # Check if Redis is available
-        if not await is_redis_available():
+
+        redis_client = await get_redis()
+        if redis_client is None:
             return await call_next(request)
-        
-        redis_client = get_redis()
-        if not redis_client:
-            return await call_next(request)
-        
-        # Generate cache key from URL and query parameters
+
+        # Generate cache key
         cache_key = self._generate_cache_key(request)
-        
+
         try:
-            # Try to get cached response
+            # Try to get from cache
             cached_response = await redis_client.get(cache_key)
             if cached_response:
-                logger.debug(f"Cache hit for middleware key: {cache_key}")
+                logger.debug(f"[Cache Middleware] Hit for {request.url.path}")
                 cached_data = json.loads(cached_response)
-                return JSONResponse(
-                    content=cached_data["content"],
+                return StarletteResponse(
+                    content=cached_data["body"],
                     status_code=cached_data["status_code"],
-                    headers={"X-Cache": "HIT"}
+                    headers=cached_data["headers"],
+                    media_type=cached_data.get("media_type", "application/json")
                 )
-            
-            # Cache miss - process request
+
+            # Cache miss - execute request
             response = await call_next(request)
-            
-            # Only cache successful JSON responses
-            if (response.status_code == 200 and 
-                response.headers.get("content-type", "").startswith("application/json")):
-                
+
+            # Only cache successful responses
+            if response.status_code == 200:
                 # Read response body
-                response_body = b""
+                body = b""
                 async for chunk in response.body_iterator:
-                    response_body += chunk
-                
-                try:
-                    response_data = json.loads(response_body.decode())
-                    cache_data = {
-                        "content": response_data,
-                        "status_code": response.status_code
-                    }
-                    
-                    # Store in cache
-                    await redis_client.setex(cache_key, self.ttl, json.dumps(cache_data))
-                    logger.debug(f"Cached response for middleware key: {cache_key}")
-                    
-                    # Return response with cache miss header
-                    return JSONResponse(
-                        content=response_data,
-                        status_code=response.status_code,
-                        headers={"X-Cache": "MISS"}
-                    )
-                except json.JSONDecodeError:
-                    # If response is not JSON, return as-is
-                    pass
-            
+                    body += chunk
+
+                # Store in cache
+                cache_data = {
+                    "body": body.decode("utf-8"),
+                    "status_code": response.status_code,
+                    "headers": dict(response.headers),
+                    "media_type": response.media_type
+                }
+
+                await redis_client.setex(cache_key, self.ttl, json.dumps(cache_data))
+                logger.debug(f"[Cache Middleware] Stored {request.url.path}: {cache_key} (TTL: {self.ttl}s)")
+
+                # Return new response with the body
+                return StarletteResponse(
+                    content=body,
+                    status_code=response.status_code,
+                    headers=response.headers,
+                    media_type=response.media_type
+                )
+
             return response
-            
+
         except Exception as e:
-            logger.error(f"Cache middleware error for key {cache_key}: {e}")
+            logger.warning(f"[Cache Middleware] Error for {request.url.path}: {e}")
             return await call_next(request)
-    
+
     def _generate_cache_key(self, request: Request) -> str:
-        """Generate cache key from request URL and parameters."""
-        url_with_params = str(request.url)
-        key_hash = hashlib.md5(url_with_params.encode()).hexdigest()
-        return f"middleware:response:{key_hash}"
+        """Generate a unique cache key for the request."""
+        # Include path, query parameters, and relevant headers
+        key_data = {
+            "path": request.url.path,
+            "query": str(request.query_params),
+            "user_agent": request.headers.get("user-agent", ""),
+        }
+
+        key_string = json.dumps(key_data, sort_keys=True)
+        key_hash = hashlib.md5(key_string.encode()).hexdigest()
+        return f"response_cache:{key_hash}"
