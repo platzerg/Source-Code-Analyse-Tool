@@ -50,3 +50,4 @@ nul
 .env*
 !.env.example
 !.env.*.example
+9_Agent_SaaS/

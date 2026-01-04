@@ -14,11 +14,30 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
+// Check if mock auth is enabled
+const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true'
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        // Mock authentication for local development
+        if (MOCK_AUTH) {
+            console.log('🔓 Mock Auth enabled - bypassing Supabase')
+            setUser({
+                id: 'mock-user-id',
+                email: 'dev@localhost',
+                created_at: new Date().toISOString(),
+                app_metadata: {},
+                user_metadata: {},
+                aud: 'authenticated',
+                role: 'authenticated'
+            } as User)
+            setLoading(false)
+            return
+        }
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null)
@@ -36,6 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const signIn = async (email: string, password: string) => {
+        if (MOCK_AUTH) {
+            console.log('🔓 Mock signIn - auto-authenticated')
+            return
+        }
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -44,6 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const signUp = async (email: string, password: string) => {
+        if (MOCK_AUTH) {
+            console.log('🔓 Mock signUp - auto-authenticated')
+            return
+        }
         const { error } = await supabase.auth.signUp({
             email,
             password,
@@ -52,6 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const signOut = async () => {
+        if (MOCK_AUTH) {
+            console.log('🔓 Mock signOut - clearing mock user')
+            setUser(null)
+            return
+        }
         const { error } = await supabase.auth.signOut()
         if (error) throw error
     }

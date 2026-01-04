@@ -24,6 +24,7 @@ services:
       - "8359:8000"
     env_file:
       - ./backend/.env
+      - ./.env.docker
     environment:
       # Langfuse Observability (optional)
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
