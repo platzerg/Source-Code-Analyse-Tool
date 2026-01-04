@@ -48,18 +48,6 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(api_router, prefix="/api/v1")
 
-# Include AI Chat router
-from app.api.ai_chat_clean import router as ai_chat_router
-app.include_router(ai_chat_router, prefix="/api/v1/ai", tags=["AI Chat"])
-
-# Include Prompt Generation router
-from app.api.prompt_generation import router as prompt_router
-app.include_router(prompt_router, prefix="/api/v1/ai", tags=["Prompt Generation"])
-
-# Include Chat History router
-from app.api.chat_history import router as chat_history_router
-app.include_router(chat_history_router, prefix="/api/v1", tags=["Chat History"])
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
