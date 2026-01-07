@@ -5,9 +5,9 @@ from typing import Dict, Any, Optional
 from app.db.repositories import SystemSettingsRepository
 
 
-def get_menu_visibility() -> Dict[str, Any]:
+async def get_menu_visibility() -> Dict[str, Any]:
     """Get menu visibility settings."""
-    settings = SystemSettingsRepository.get("menu_visibility")
+    settings = await SystemSettingsRepository.get("menu_visibility")
 
     if settings:
         return settings.get("value", {})
@@ -47,9 +47,9 @@ def get_menu_visibility() -> Dict[str, Any]:
     }
 
 
-def update_menu_visibility(settings: Dict[str, Any]) -> bool:
+async def update_menu_visibility(settings: Dict[str, Any]) -> bool:
     """Update menu visibility settings."""
-    SystemSettingsRepository.set(
+    await SystemSettingsRepository.set(
         key="menu_visibility",
         value=settings,
         description="Menu visibility configuration for UI tabs"
@@ -57,32 +57,32 @@ def update_menu_visibility(settings: Dict[str, Any]) -> bool:
     return True
 
 
-def get_all_settings() -> Dict[str, Any]:
+async def get_all_settings() -> Dict[str, Any]:
     """Get all system settings as a dictionary."""
-    all_settings = SystemSettingsRepository.get_all()
+    all_settings = await SystemSettingsRepository.get_all()
     result = {}
     for setting in all_settings:
         result[setting["key"]] = setting["value"]
     return result
 
 
-def get_setting(key: str, default: Any = None) -> Any:
+async def get_setting(key: str, default: Any = None) -> Any:
     """Get a specific setting by key."""
-    setting = SystemSettingsRepository.get(key)
+    setting = await SystemSettingsRepository.get(key)
     if setting:
         return setting.get("value", default)
     return default
 
 
-def set_setting(key: str, value: Any, description: str = None) -> bool:
+async def set_setting(key: str, value: Any, description: str = None) -> bool:
     """Set a specific setting."""
-    SystemSettingsRepository.set(key, value, description)
+    await SystemSettingsRepository.set(key, value, description)
     return True
 
 
-def get_system_status() -> Dict[str, Any]:
+async def get_system_status() -> Dict[str, Any]:
     """Get system operational status."""
-    status = SystemSettingsRepository.get("system_status")
+    status = await SystemSettingsRepository.get("system_status")
 
     if status:
         return status.get("value", {})
@@ -96,9 +96,9 @@ def get_system_status() -> Dict[str, Any]:
     }
 
 
-def update_system_status(status: Dict[str, Any]) -> bool:
+async def update_system_status(status: Dict[str, Any]) -> bool:
     """Update system operational status."""
-    SystemSettingsRepository.set(
+    await SystemSettingsRepository.set(
         key="system_status",
         value=status,
         description="System operational status"

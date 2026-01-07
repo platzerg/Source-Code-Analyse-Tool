@@ -138,7 +138,7 @@ export default function Dashboard() {
                                         <p className="text-sm font-medium text-gray-500 mb-1">{t('dashboard.stats.total_projects')}</p>
                                         <h3 className="text-4xl font-bold text-gray-900">{projects.length}</h3>
                                         <div className="mt-2 inline-flex items-center text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                                            {projects.filter(p => p.status === "Active").length} {t('dashboard.stats.active_projects')}
+                                            {projects.filter(p => p.status?.toLowerCase() === "active").length} {t('dashboard.stats.active_projects')}
                                         </div>
                                     </div>
                                     <div className="p-4 bg-red-50 rounded-full text-red-800 group-hover:bg-red-100 transition-colors">
@@ -156,7 +156,7 @@ export default function Dashboard() {
                                         <p className="text-sm font-medium text-gray-500 mb-1">{t('dashboard.stats.total_repos')}</p>
                                         <h3 className="text-4xl font-bold text-gray-900">{repositories.length}</h3>
                                         <div className="mt-2 inline-flex items-center text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                                            {repositories.filter(r => r.status === "Cloned").length} {t('dashboard.stats.cloned_repos')}
+                                            {repositories.filter(r => r.status?.toLowerCase() === "cloned").length} {t('dashboard.stats.cloned_repos')}
                                         </div>
                                     </div>
                                     <div className="p-4 bg-gray-100 rounded-full text-gray-700 group-hover:bg-gray-200 transition-colors">
@@ -237,7 +237,7 @@ export default function Dashboard() {
                                                                 <td className="px-6 py-4">
                                                                     <span className={cn(
                                                                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                                                                        project.status === "Active" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-800"
+                                                                        project.status?.toLowerCase() === "active" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-800"
                                                                     )}>
                                                                         {project.status}
                                                                     </span>
@@ -285,13 +285,13 @@ export default function Dashboard() {
                                                                 <td className="px-6 py-4">
                                                                     <span className={cn(
                                                                         "inline-flex items-center gap-1.5 font-medium text-xs",
-                                                                        repo.repo_scan === "Completed" ? "text-emerald-600" :
-                                                                            repo.repo_scan === "In Progress" ? "text-blue-600" : "text-gray-500"
+                                                                        repo.repo_scan?.toLowerCase() === "completed" ? "text-emerald-600" :
+                                                                            repo.repo_scan?.toLowerCase() === "in progress" ? "text-blue-600" : "text-gray-500"
                                                                     )}>
                                                                         <span className={cn(
                                                                             "w-1.5 h-1.5 rounded-full text-emerald-600",
-                                                                            repo.repo_scan === "Completed" ? "bg-emerald-600" :
-                                                                                repo.repo_scan === "In Progress" ? "bg-blue-600 animate-pulse" : "bg-gray-400"
+                                                                            repo.repo_scan?.toLowerCase() === "completed" ? "bg-emerald-600" :
+                                                                                repo.repo_scan?.toLowerCase() === "in progress" ? "bg-blue-600 animate-pulse" : "bg-gray-400"
                                                                         )}></span>
                                                                         {repo.repo_scan}
                                                                     </span>
@@ -307,7 +307,7 @@ export default function Dashboard() {
                                                                         )}
                                                                         <span className={cn(
                                                                             "inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase font-bold",
-                                                                            repo.status === "Cloned" ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-700"
+                                                                            repo.status?.toLowerCase() === "cloned" ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-700"
                                                                         )}>
                                                                             {repo.status}
                                                                         </span>

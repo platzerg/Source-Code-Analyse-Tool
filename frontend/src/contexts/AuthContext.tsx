@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 interface AuthContextType {
     user: User | null
@@ -14,15 +14,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
-// Check if mock auth is enabled
-const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true'
+// Check if mock auth is enabled (auto-enable if Supabase not configured)
+const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || !isSupabaseConfigured()
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Mock authentication for local development
+        // Mock authentication for local development or when Supabase not configured
         if (MOCK_AUTH) {
             console.log('🔓 Mock Auth enabled - bypassing Supabase')
             setUser({
@@ -34,6 +34,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 aud: 'authenticated',
                 role: 'authenticated'
             } as User)
+            setLoading(false)
+            return
+        }
+
+        // Only use Supabase if configured
+        if (!supabase) {
+            console.warn('Supabase not configured, using mock auth')
             setLoading(false)
             return
         }
@@ -55,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const signIn = async (email: string, password: string) => {
-        if (MOCK_AUTH) {
+        if (MOCK_AUTH || !supabase) {
             console.log('🔓 Mock signIn - auto-authenticated')
             return
         }
@@ -67,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const signUp = async (email: string, password: string) => {
-        if (MOCK_AUTH) {
+        if (MOCK_AUTH || !supabase) {
             console.log('🔓 Mock signUp - auto-authenticated')
             return
         }
@@ -79,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const signOut = async () => {
-        if (MOCK_AUTH) {
+        if (MOCK_AUTH || !supabase) {
             console.log('🔓 Mock signOut - clearing mock user')
             setUser(null)
             return

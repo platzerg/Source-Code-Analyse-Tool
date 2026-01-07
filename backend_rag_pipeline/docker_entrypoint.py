@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import asyncio
 import time
 from pathlib import Path
 
@@ -37,9 +38,9 @@ def main():
         import repo_watcher as git_watcher
         watcher = git_watcher.GitRepositoryWatcher(repos_dir="repos")
         if args.mode == 'single':
-            watcher.run_once()
+            asyncio.run(watcher.run_once())
         else:
-            watcher.watch(interval=args.interval)
+            asyncio.run(watcher.watch(interval=args.interval))
     elif args.pipeline == 'google_drive':
         from Google_Drive import main as gdrive_main
         gdrive_main.main()

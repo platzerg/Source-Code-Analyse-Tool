@@ -5,6 +5,7 @@ import logfire
 import base64
 import os
 import sys
+from app.core.config import get_settings
 
 load_dotenv()
 
@@ -29,21 +30,28 @@ def configure_langfuse():
         trace.Tracer or None: A tracer instance if Langfuse is configured, None otherwise
     """
     try:
-        print("[Langfuse] Step 1: Reading environment variables...", flush=True)
-        LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
-        LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
-        LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+        settings = get_settings()
         
-        # If Langfuse credentials are not provided, return None
-        if not LANGFUSE_PUBLIC_KEY or not LANGFUSE_SECRET_KEY:
-            print("[Langfuse] Credentials not found. Tracing disabled.", flush=True)
+        # Check if Langfuse is enabled via configuration flag
+        if not settings.enable_langfuse:
+            print("[Langfuse] Disabled via ENABLE_LANGFUSE=false. Tracing disabled.", flush=True)
             return None
         
-        print(f"[Langfuse] Step 2: Credentials found. Host: {LANGFUSE_HOST}", flush=True)
-        LANGFUSE_AUTH = base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
+        print("[Langfuse] Step 1: Reading configuration...", flush=True)
+        
+        # If Langfuse credentials are not provided, return None
+        if not settings.is_langfuse_configured:
+            print("[Langfuse] Credentials not found. Tracing disabled.", flush=True)
+            print("[Langfuse] Set ENABLE_LANGFUSE=true and provide credentials to enable.", flush=True)
+            return None
+        
+        print(f"[Langfuse] Step 2: Credentials found. Host: {settings.langfuse_host}", flush=True)
+        LANGFUSE_AUTH = base64.b64encode(
+            f"{settings.langfuse_public_key}:{settings.langfuse_secret_key}".encode()
+        ).decode()
 
         print("[Langfuse] Step 3: Setting OTEL environment variables...", flush=True)
-        os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = f"{LANGFUSE_HOST}/api/public/otel"
+        os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = f"{settings.langfuse_host}/api/public/otel"
         os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {LANGFUSE_AUTH}"
 
         print("[Langfuse] Step 4: Applying nest_asyncio...", flush=True)
@@ -59,7 +67,7 @@ def configure_langfuse():
         print("[Langfuse] Step 6: Getting tracer...", flush=True)
         tracer = trace.get_tracer("source_code_analysis_api")
 
-        print(f"[Langfuse] [OK] Tracing enabled successfully! Host: {LANGFUSE_HOST}", flush=True)
+        print(f"[Langfuse] [OK] Tracing enabled successfully! Host: {settings.langfuse_host}", flush=True)
         return tracer
     except Exception as e:
         print(f"[Langfuse] [ERROR] Configuration failed at: {e}", flush=True)

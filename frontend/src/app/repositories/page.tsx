@@ -86,7 +86,7 @@ function RepositoriesList() {
                 id: String(r.id),
                 name: r.name,
                 url: r.url,
-                isCloned: r.status === "Cloned",
+                isCloned: r.status?.toLowerCase() === "cloned",
                 commitAnalysis: {
                     status: r.commit_analysis === "Completed" ? "completed" : "not_started"
                 },

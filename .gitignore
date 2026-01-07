@@ -50,4 +50,9 @@ nul
 .env*
 !.env.example
 !.env.*.example
+
+# Environment Backups
+.env-backup/
+
+# Legacy Directories
 9_Agent_SaaS/

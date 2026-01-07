@@ -55,7 +55,7 @@ async def get_projects():
             span.set_attribute("http.method", "GET")
             span.set_attribute("http.route", "/api/v1/projects")
         
-        projects = project_service.get_all_projects()
+        projects = await project_service.get_all_projects()
         
         if tracer and span:
             span.set_attribute("output.count", len(projects))
@@ -75,7 +75,7 @@ async def create_project(project: ProjectCreate):
             span.set_attribute("input.project_name", project.name)
             span.set_attribute("input.owner", project.owner)
         
-        new_project = project_service.create_project(project)
+        new_project = await project_service.create_project(project)
         
         if tracer and span:
             span.set_attribute("output.project_id", new_project.id)
@@ -94,7 +94,7 @@ async def delete_project(project_id: int):
             span.set_attribute("http.route", "/api/v1/projects/{project_id}")
             span.set_attribute("input.project_id", project_id)
         
-        success = project_service.delete_project(project_id)
+        success = await project_service.delete_project(project_id)
         if not success:
             if tracer and span:
                 span.set_attribute("error", "Project not found")
@@ -114,7 +114,7 @@ async def get_project(project_id: int):
             span.set_attribute("http.route", "/api/v1/projects/{project_id}")
             span.set_attribute("input.project_id", project_id)
         
-        project = project_service.get_project_by_id(project_id)
+        project = await project_service.get_project_by_id(project_id)
         if not project:
             if tracer and span:
                 span.set_attribute("error", "Project not found")
@@ -127,25 +127,22 @@ async def get_project(project_id: int):
         
         return project
 
-from fastapi import APIRouter, HTTPException, Body
-# ... (existing imports)
-
-# ... (inside file)
+# --- 2. Projects Endpoints (Delegating to Service) ---
 
 @router.put("/projects/{project_id}/repositories")
-def update_project_repositories(project_id: int, repository_ids: List[int] = Body(...)):
-    success = project_service.update_project_repos(project_id, repository_ids)
+async def update_project_repositories(project_id: int, repository_ids: List[int] = Body(...)):
+    success = await project_service.update_project_repos(project_id, repository_ids)
     if not success:
         raise HTTPException(status_code=404, detail="Project not found")
     return {"message": "Repositories updated successfully", "repository_ids": repository_ids}
 
 @router.get("/projects/{project_id}/repositories", response_model=List[Repository])
-def get_project_repositories(project_id: int):
-    project = project_service.get_project_by_id(project_id)
+async def get_project_repositories(project_id: int):
+    project = await project_service.get_project_by_id(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    all_repos = repo_service.get_all_repositories()
+    all_repos = await repo_service.get_all_repositories()
     # Filter
     project_repos = [r for r in all_repos if r.id in (project.repository_ids or [])]
     return project_repos
@@ -153,15 +150,15 @@ def get_project_repositories(project_id: int):
 # --- Task Management ---
 
 @router.post("/projects/{project_id}/tasks")
-def create_task(project_id: int, task: ProjectTask):
-    created_task = project_service.add_task(project_id, task)
+async def create_task(project_id: int, task: ProjectTask):
+    created_task = await project_service.add_task(project_id, task)
     if not created_task:
         raise HTTPException(status_code=404, detail="Project not found")
     return created_task
 
 @router.put("/projects/{project_id}/tasks/{task_id}/status")
-def update_task_status(project_id: int, task_id: str, status: str):
-    success = project_service.update_task_status(project_id, task_id, status)
+async def update_task_status(project_id: int, task_id: str, status: str):
+    success = await project_service.update_task_status(project_id, task_id, status)
     if not success:
         raise HTTPException(status_code=404, detail="Project or task not found")
     return {"message": "Task status updated", "task_id": task_id, "status": status}
@@ -169,29 +166,29 @@ def update_task_status(project_id: int, task_id: str, status: str):
 # --- Milestone Management ---
 
 @router.post("/projects/{project_id}/milestones")
-def create_milestone(project_id: int, milestone: ProjectMilestone):
-    created = project_service.add_milestone(project_id, milestone)
+async def create_milestone(project_id: int, milestone: ProjectMilestone):
+    created = await project_service.add_milestone(project_id, milestone)
     if not created:
         raise HTTPException(status_code=404, detail="Project not found")
     return created
 
 @router.delete("/projects/{project_id}/milestones/{milestone_label}")
-def delete_milestone(project_id: int, milestone_label: str):
-    success = project_service.delete_milestone(project_id, milestone_label)
+async def delete_milestone(project_id: int, milestone_label: str):
+    success = await project_service.delete_milestone(project_id, milestone_label)
     if not success:
         raise HTTPException(status_code=404, detail="Project or milestone not found")
     return {"status": "success", "message": f"Milestone '{milestone_label}' deleted"}
 
 @router.put("/projects/{project_id}/milestones/{milestone_label}")
-def update_milestone(project_id: int, milestone_label: str, update_data: ProjectMilestone):
-    updated = project_service.update_milestone(project_id, milestone_label, update_data)
+async def update_milestone(project_id: int, milestone_label: str, update_data: ProjectMilestone):
+    updated = await project_service.update_milestone(project_id, milestone_label, update_data)
     if not updated:
         raise HTTPException(status_code=404, detail="Project or milestone not found")
     return updated
 
 @router.put("/projects/{project_id}/milestones/{milestone_label}/date")
-def update_milestone_date(project_id: int, milestone_label: str, date: str):
-    success = project_service.update_milestone_date(project_id, milestone_label, date)
+async def update_milestone_date(project_id: int, milestone_label: str, date: str):
+    success = await project_service.update_milestone_date(project_id, milestone_label, date)
     if not success:
         raise HTTPException(status_code=404, detail="Project or milestone not found")
     return {"message": "Milestone date updated", "label": milestone_label, "date": date}
@@ -210,7 +207,7 @@ async def get_repositories():
             span.set_attribute("http.method", "GET")
             span.set_attribute("http.route", "/api/v1/repositories")
         
-        repos = repo_service.get_all_repositories()
+        repos = await repo_service.get_all_repositories()
         
         if tracer and span:
             span.set_attribute("output.count", len(repos))
@@ -231,7 +228,7 @@ async def create_repository(repo: RepositoryCreate):
             span.set_attribute("input.repo_url", repo.url)
             span.set_attribute("input.username", repo.username)
         
-        new_repo = repo_service.create_repository(repo)
+        new_repo = await repo_service.create_repository(repo)
         
         if tracer and span:
             span.set_attribute("output.repo_id", new_repo.id)
@@ -252,7 +249,7 @@ async def delete_repository(repo_id: int):
             span.set_attribute("http.route", "/api/v1/repositories/{repo_id}")
             span.set_attribute("input.repo_id", repo_id)
         
-        success = repo_service.delete_repository(repo_id)
+        success = await repo_service.delete_repository(repo_id)
         if not success:
             if tracer and span:
                 span.set_attribute("error", "Repository not found")
@@ -326,9 +323,28 @@ async def stream_repository_status(repo_id: int, mode: str = "clone"):
             
             if progress == 100:
                 # Update persistent state via service
-                repo_service.update_scan_status(repo_id, "Completed")
+                await repo_service.update_scan_status_async(repo_id, "Completed")
                 
             await asyncio.sleep(1.2) # Simulate work
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.get("/projects/{project_id}/events", tags=["Projects"])
+async def stream_project_events(project_id: int):
+    """SSE endpoint for project real-time updates."""
+    project = await project_service.get_project_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    async def event_generator():
+        # Minimal mock event stream to keep UI happy and show tasks
+        yield f"data: {json.dumps({'type': 'connected', 'id': project_id})}\n\n"
+        
+        while True:
+            # heartbeat
+            yield f"data: {json.dumps({'type': 'ping', 'time': datetime.now().isoformat()})}\n\n"
+            await asyncio.sleep(15)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
@@ -352,14 +368,14 @@ async def get_project_insights(project_id: int):
 # --- 5. Overview and Settings (Direct Storage Access for now) ---
 
 @router.get("/overview")
-def get_overview():
+async def get_overview():
     """Get dashboard overview data including system status"""
     # Get system status from Supabase
-    system_status = settings_service.get_system_status()
+    system_status = await settings_service.get_system_status()
 
     # Get stats dynamically from database
-    projects = project_service.get_all_projects()
-    repositories = repo_service.get_all_repositories()
+    projects = await project_service.get_all_projects()
+    repositories = await repo_service.get_all_repositories()
 
     return {
         "system_status": system_status,
@@ -372,15 +388,15 @@ def get_overview():
     }
 
 @router.get("/settings")
-def get_settings():
+async def get_settings():
     """Get application settings including menu visibility"""
-    return settings_service.get_menu_visibility()
+    return await settings_service.get_menu_visibility()
 
 @router.post("/settings")
-def update_settings(settings: dict):
+async def update_settings(settings: dict):
     """Update application settings"""
     try:
-        settings_service.update_menu_visibility(settings)
+        await settings_service.update_menu_visibility(settings)
         return {"message": "Settings updated successfully"}
     except Exception as e:
         import traceback

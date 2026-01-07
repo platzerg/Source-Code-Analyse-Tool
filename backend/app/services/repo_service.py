@@ -8,9 +8,9 @@ from app.core.cache import cache_result
 import asyncio
 
 
-def get_all_repositories() -> List[Repository]:
+async def get_all_repositories() -> List[Repository]:
     """Get all repositories from database."""
-    return RepositoryRepository.get_all()
+    return await RepositoryRepository.get_all()
 
 
 def get_repository_by_id(repo_id: int) -> Optional[Repository]:
@@ -21,7 +21,7 @@ def get_repository_by_id(repo_id: int) -> Optional[Repository]:
 @cache_result(ttl=1800, key_prefix="repo")
 async def get_repository_by_id_async(repo_id: int) -> Optional[Repository]:
     """Get repository by ID with analysis results."""
-    repo = RepositoryRepository.get_by_id(repo_id)
+    repo = await RepositoryRepository.get_by_id(repo_id)
     # Simulate expensive operation
     await asyncio.sleep(0.1)
     if repo:
@@ -83,7 +83,7 @@ def get_repositories_by_project(project_id: int) -> List[Repository]:
     return RepositoryRepository.get_by_project(project_id)
 
 
-def create_repository(repository_in: RepositoryCreate, user_id: str = None) -> Repository:
+async def create_repository(repository_in: RepositoryCreate, user_id: str = None) -> Repository:
     """Create a new repository in database."""
     # Only include fields that exist in the database schema
     repo_data = {
@@ -95,27 +95,37 @@ def create_repository(repository_in: RepositoryCreate, user_id: str = None) -> R
     }
     if user_id:
         repo_data["user_id"] = user_id
-    return RepositoryRepository.create(repo_data)
+    return await RepositoryRepository.create(repo_data)
+
+
+async def update_repository_status_async(repo_id: int, status: str) -> Optional[Repository]:
+    """Update repository status (async)."""
+    return await RepositoryRepository.update(repo_id, {"status": status})
 
 
 def update_repository_status(repo_id: int, status: str) -> Optional[Repository]:
     """Update repository status."""
-    return RepositoryRepository.update(repo_id, {"status": status})
+    return asyncio.run(update_repository_status_async(repo_id, status))
 
 
-def delete_repository(repo_id: int) -> bool:
+async def delete_repository(repo_id: int) -> bool:
     """Delete a repository from database."""
-    return RepositoryRepository.delete(repo_id)
+    return await RepositoryRepository.delete(repo_id)
 
 
 def update_repository(repo_id: int, updates: dict) -> Optional[Repository]:
     """Update repository fields."""
-    return RepositoryRepository.update(repo_id, updates)
+    return asyncio.run(RepositoryRepository.update(repo_id, updates))
+
+
+async def update_scan_status_async(repo_id: int, status: str) -> None:
+    """Update repository scan status (async)."""
+    await RepositoryRepository.update(repo_id, {"repo_scan": status})
 
 
 def update_scan_status(repo_id: int, status: str) -> None:
     """Update repository scan status."""
-    RepositoryRepository.update(repo_id, {"repo_scan": status})
+    asyncio.run(update_scan_status_async(repo_id, status))
 
 def get_mock_project_insights(project_id: int) -> List[ProjectInsight]:
     """Return mock project insights data (sync version)."""

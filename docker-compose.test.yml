@@ -1,0 +1,40 @@
+# Docker Compose override for testing with local PostgreSQL
+# Usage: docker compose -f docker-compose.local.yml -f docker-compose.test.yml up -d
+
+services:
+  backend:
+    env_file: [] # Override to prevent loading backend/.env with Supabase credentials
+    environment:
+      # Configuration Switches
+      - ENABLE_LANGFUSE=false
+      - DATABASE_PROVIDER=postgres
+      # PostgreSQL Configuration
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=source_code_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      # Redis Configuration
+      - REDIS_URL=redis://scat-redis:6379
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8359
+        NEXT_PUBLIC_SUPABASE_URL: ""
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8359
+      - NEXT_PUBLIC_SUPABASE_URL=
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+  rag-pipeline:
+    environment:
+      - ENABLE_LANGFUSE=false
+      - DATABASE_PROVIDER=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=source_code_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres

@@ -78,3 +78,6 @@ zipp==3.23.0
 redis>=5.0.0
 pydantic-ai>=0.0.14
 openai>=1.0.0
+
+pydantic-settings==2.2.1
+asyncpg==0.29.0

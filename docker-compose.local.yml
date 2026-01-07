@@ -1,29 +1,24 @@
 # Docker Compose for local development
 services:
-  backend:
-    build: ./backend
-    container_name: source-code-analysis-backend
+  # PostgreSQL Database Service (optional, for DATABASE_PROVIDER=postgres)
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: scat-postgres
     restart: always
     ports:
-      - "8359:8000"
-    env_file:
-      - ./backend/.env
-
-  frontend:
-    build:
-      context: ./frontend
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:8359
-        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-    env_file:
-      - .env.docker
-    container_name: source-code-analysis-frontend
-    restart: always
-    ports:
-      - "3509:3000"
-    depends_on:
-      - backend
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=source_code_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -35,20 +30,74 @@ services:
     volumes:
       - redis-data:/data
 
+  backend:
+    build: ./backend
+    container_name: source-code-analysis-backend
+    restart: always
+    ports:
+      - "8359:8000"
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      # Configuration Switches
+      - ENABLE_LANGFUSE=${ENABLE_LANGFUSE:-false}
+
+      # PostgreSQL Configuration
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=source_code_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      # Redis Configuration
+      - REDIS_URL=redis://scat-redis:6379
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8359
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    env_file:
+      - ./frontend/.env.docker
+    container_name: source-code-analysis-frontend
+    restart: always
+    ports:
+      - "3509:3000"
+    depends_on:
+      - backend
+
   rag-pipeline:
     build: ./backend_rag_pipeline
     container_name: source-code-analysis-rag
     restart: always
     env_file:
-      - ./backend_rag_pipeline/.env
+      - ./backend_rag_pipeline/.env.docker
     environment:
       - ENVIRONMENT=development
       - PYTHONUNBUFFERED=1
+      - RAG_PIPELINE_ID=default-local-pipeline
+      # Configuration Switches
+      - ENABLE_LANGFUSE=${ENABLE_LANGFUSE:-false}
+      - DATABASE_PROVIDER=${DATABASE_PROVIDER:-postgres}
+      # PostgreSQL Configuration
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=source_code_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
+      - ./backend_rag_pipeline:/app
       - ./backend_rag_pipeline/data:/app/data
       - ./backend_rag_pipeline/repos:/app/repos
     depends_on:
       - backend
 
 volumes:
+  postgres-data:
   redis-data:

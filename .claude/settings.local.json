@@ -10,7 +10,13 @@
       "Bash(python -m json.tool:*)",
       "Bash(taskkill:*)",
       "Bash(findstr:*)",
-      "Bash(..venvScriptspython.exe -m pytest tests -v)"
+      "Bash(..venvScriptspython.exe -m pytest tests -v)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(npx next lint:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker logs:*)"
     ]
   }
 }

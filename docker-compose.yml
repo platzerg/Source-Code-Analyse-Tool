@@ -1,4 +1,25 @@
 services:
+  # PostgreSQL Database Service (optional, for DATABASE_PROVIDER=postgres)
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: scat-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=source_code_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   # Redis Cache Service
   redis:
     image: redis:7-alpine
@@ -10,11 +31,12 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+
   # Backend API Service
   backend:
     build: ./backend
@@ -23,13 +45,21 @@ services:
     ports:
       - "8359:8000"
     env_file:
-      - ./backend/.env
-      - ./.env.docker
+      - ./backend/.env.docker
     environment:
+      # Configuration Switches
+      - ENABLE_LANGFUSE=${ENABLE_LANGFUSE:-false}
+      - DATABASE_PROVIDER=${DATABASE_PROVIDER:-postgres}
       # Langfuse Observability (optional)
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
       - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      # PostgreSQL Configuration
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=source_code_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       # Redis Configuration
       - REDIS_URL=redis://scat-redis:6379
     healthcheck:
@@ -39,7 +69,10 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   # Frontend Service
   frontend:
@@ -53,6 +86,8 @@ services:
     restart: always
     ports:
       - "3509:3000"
+    env_file:
+      - ./frontend/.env.docker
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
@@ -72,7 +107,7 @@ services:
     container_name: source-code-analysis-rag
     restart: always
     env_file:
-      - ./backend_rag_pipeline/.env
+      - ./backend_rag_pipeline/.env.docker
     environment:
       - ENVIRONMENT=production
       - PYTHONUNBUFFERED=1
@@ -84,5 +119,6 @@ services:
       - backend
 
 volumes:
+  postgres-data:
   redis-data:
   backend-data:
