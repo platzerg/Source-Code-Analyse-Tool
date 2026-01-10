@@ -88,15 +88,14 @@ class StateManager:
             return {'last_check_time': None, 'known_files': {}, 'exists': False}
     
     def load_state(self) -> Dict[str, Any]:
+        """Synchronous wrapper for load_state_async - gracefully degrades on errors"""
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # This is tricky if already in a loop, but repo_watcher is usually sync
-                return asyncio.run(self.load_state_async())
-            else:
-                return asyncio.run(self.load_state_async())
-        except RuntimeError:
             return asyncio.run(self.load_state_async())
+        except Exception as e:
+            # Any error loading state - just return empty state and continue
+            # This is non-critical for operation
+            self.logger.debug(f"Could not load state (non-critical): {e}")
+            return {'last_check_time': None, 'known_files': {}, 'exists': False}
 
     async def save_state_async(self, last_check_time: Optional[datetime] = None, 
                    known_files: Optional[Dict[str, str]] = None) -> bool:
@@ -148,13 +147,19 @@ class StateManager:
                     response = self.supabase.table('rag_pipeline_state').insert(data).execute()
                 return bool(response.data)
         except Exception as e:
-            self.logger.error(f"Error saving state to database: {e}")
+            self.logger.debug(f"Could not save state (non-critical): {e}")
             return False
-
 
     def save_state(self, last_check_time: Optional[datetime] = None, 
                    known_files: Optional[Dict[str, str]] = None) -> bool:
-        return asyncio.run(self.save_state_async(last_check_time, known_files))
+        """Synchronous wrapper for save_state_async - gracefully degrades on errors"""
+        try:
+            return asyncio.run(self.save_state_async(last_check_time, known_files))
+        except Exception as e:
+            # Any error saving state - just log and continue
+            # This is non-critical for operation
+            self.logger.debug(f"Could not save state (non-critical): {e}")
+            return False
     
     def update_last_check_time(self, last_check_time: datetime) -> bool:
         return self.save_state(last_check_time=last_check_time)
