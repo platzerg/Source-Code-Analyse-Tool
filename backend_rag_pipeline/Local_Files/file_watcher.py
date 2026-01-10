@@ -1,5 +1,5 @@
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import mimetypes
 import time
 import json
@@ -37,7 +37,7 @@ class LocalFileWatcher:
         
         if self.state_manager:
             state = self.state_manager.load_state()
-            self.last_check_time = state.get('last_check_time') or datetime.strptime('1970-01-01T00:00:00.000Z', '%Y-%m-%dT%H:%M:%S.%fZ')
+            self.last_check_time = state.get('last_check_time') or datetime.strptime('1970-01-01T00:00:00.000Z', '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
             self.known_files = state.get('known_files', {})
         else:
             state = load_state_from_config(self.config_path)
@@ -59,13 +59,13 @@ class LocalFileWatcher:
         for root, _, files in os.walk(self.watch_directory):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
-                mod_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+                mod_time = datetime.fromtimestamp(os.path.getmtime(file_path), tz=timezone.utc)
                 if file_path not in self.known_files or mod_time > self.last_check_time:
                     changed_files.append({
                         'id': file_path, 'name': file_name, 'mimeType': self.get_mime_type(file_path),
                         'webViewLink': f"file://{file_path}", 'modifiedTime': mod_time.isoformat()
                     })
-        self.last_check_time = datetime.now()
+        self.last_check_time = datetime.now(timezone.utc)
         return changed_files
 
     def check_for_changes(self) -> Dict[str, Any]:

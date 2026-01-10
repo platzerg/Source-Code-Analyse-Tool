@@ -101,21 +101,19 @@ class StateManager:
     async def save_state_async(self, last_check_time: Optional[datetime] = None, 
                    known_files: Optional[Dict[str, str]] = None) -> bool:
         try:
-            data = {
-                'pipeline_id': self.pipeline_id,
-                'pipeline_type': self.pipeline_type,
-                'last_run': datetime.now(timezone.utc).isoformat()
-            }
+            # Prepare datetime objects for database
+            last_run_dt = datetime.now(timezone.utc)
+            last_check_time_dt = None
+            
             if last_check_time is not None:
                 if last_check_time.tzinfo is None:
-                    last_check_time = last_check_time.replace(tzinfo=timezone.utc)
-                data['last_check_time'] = last_check_time.isoformat()
-            if known_files is not None:
-                data['known_files'] = known_files
+                    last_check_time_dt = last_check_time.replace(tzinfo=timezone.utc)
+                else:
+                    last_check_time_dt = last_check_time
 
             if self.database_provider == "postgres":
                 pool = await self._get_pg_pool()
-                # Use UPSERT for Postgres
+                # Use UPSERT for Postgres - pass datetime objects directly
                 async with pool.acquire() as conn:
                     await conn.execute(
                         """
@@ -126,11 +124,22 @@ class StateManager:
                             last_check_time = EXCLUDED.last_check_time, 
                             known_files = EXCLUDED.known_files
                         """,
-                        data['pipeline_id'], data['pipeline_type'], data['last_run'], 
-                        data.get('last_check_time'), json.dumps(data.get('known_files', {}))
+                        self.pipeline_id, self.pipeline_type, last_run_dt, 
+                        last_check_time_dt, json.dumps(known_files or {})
                     )
                 return True
             else:
+                # For Supabase, use ISO strings
+                data = {
+                    'pipeline_id': self.pipeline_id,
+                    'pipeline_type': self.pipeline_type,
+                    'last_run': last_run_dt.isoformat()
+                }
+                if last_check_time_dt is not None:
+                    data['last_check_time'] = last_check_time_dt.isoformat()
+                if known_files is not None:
+                    data['known_files'] = known_files
+                    
                 if not self.supabase: return False
                 state = await self.load_state_async()
                 if state['exists']:
@@ -141,6 +150,7 @@ class StateManager:
         except Exception as e:
             self.logger.error(f"Error saving state to database: {e}")
             return False
+
 
     def save_state(self, last_check_time: Optional[datetime] = None, 
                    known_files: Optional[Dict[str, str]] = None) -> bool:

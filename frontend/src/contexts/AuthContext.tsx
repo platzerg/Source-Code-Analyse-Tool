@@ -17,6 +17,15 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 // Check if mock auth is enabled (auto-enable if Supabase not configured)
 const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || !isSupabaseConfigured()
 
+// Debug logging
+console.log('🔍 Auth Configuration:', {
+    MOCK_AUTH,
+    NEXT_PUBLIC_MOCK_AUTH: process.env.NEXT_PUBLIC_MOCK_AUTH,
+    isSupabaseConfigured: isSupabaseConfigured(),
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasSupabaseClient: !!supabase
+})
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
@@ -41,6 +50,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Only use Supabase if configured
         if (!supabase) {
             console.warn('Supabase not configured, using mock auth')
+            // Enable mock auth if Supabase is not configured
+            console.log('🔓 Enabling mock auth due to missing Supabase config')
+            setUser({
+                id: 'mock-user-id',
+                email: 'dev@localhost',
+                created_at: new Date().toISOString(),
+                app_metadata: {},
+                user_metadata: {},
+                aud: 'authenticated',
+                role: 'authenticated'
+            } as User)
             setLoading(false)
             return
         }
